@@ -7,7 +7,7 @@ use BackedEnum;
 use Filament\Forms;
 use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
-use Filament\Resources\Pages\ListRecords; // Import direct v5
+use Filament\Resources\Pages\ListRecords;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Actions\EditAction;
@@ -18,7 +18,7 @@ class RoomResource extends Resource
 {
     protected static ?string $model = Room::class;
 
-    protected static bool $shouldSkipAuthorization = true; // <-- AJOUTEZ CETTE LIGNE
+    protected static bool $shouldSkipAuthorization = true;
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?string $navigationLabel = 'Chambres';
@@ -26,15 +26,19 @@ class RoomResource extends Resource
     protected static ?string $pluralModelLabel = 'Chambres';
     protected static ?string $modelLabel = 'Chambre';
 
-
-    // Formulaire de saisie standard v5
+    // Formulaire de saisie sécurisé contre les doublons
     public static function form(Schema $schema): Schema
     {
         return $schema
             ->components([
                 Forms\Components\TextInput::make('number')
                     ->required()
-                    ->label('Numéro de chambre'),
+                    ->label('Numéro de chambre')
+                    // Ajout de la sécurité d'unicité pour bloquer les doublons (ex: chambre 31)
+                    ->unique(table: 'rooms', column: 'number', ignoreRecord: true)
+                    ->validationMessages([
+                        'unique' => 'Ce numéro de chambre est déjà attribué à un autre hébergement.',
+                    ]),
 
                 Forms\Components\Select::make('room_type_id')
                     ->relationship('roomType', 'name')
@@ -53,7 +57,7 @@ class RoomResource extends Resource
             ]);
     }
 
-    // Tableau d'affichage avec badges de couleur v5
+    // Tableau d'affichage avec badges de couleur
     public static function table(Table $table): Table
     {
         return $table
@@ -69,9 +73,9 @@ class RoomResource extends Resource
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'disponible' => 'success', // Vert
-                        'occupee' => 'danger',     // Rouge
-                        'menage' => 'warning',     // Orange
+                        'disponible' => 'success',
+                        'occupee' => 'danger',
+                        'menage' => 'warning',
                         default => 'gray',
                     })
                     ->label('Statut'),
@@ -99,13 +103,10 @@ class RoomResource extends Resource
         return [];
     }
 
-
-public static function getPages(): array
-{
-    return [
-        'index' => RoomResource\Pages\ListRooms::route('/'),
-    ];
-}
-
-
+    public static function getPages(): array
+    {
+        return [
+            'index' => RoomResource\Pages\ListRooms::route('/'),
+        ];
+    }
 }

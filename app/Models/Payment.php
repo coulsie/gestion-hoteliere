@@ -40,4 +40,14 @@ class Payment extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    /**
+     * Calcule le total déjà payé par le client pour une réservation donnée
+     */
+    public static function getSommePayeePourReservation($bookingId): float
+    {
+        return (float) static::where('event_booking_id', $bookingId)
+            ->where('status', 'completed')
+            ->sum('amount');
+    }
 }

@@ -15,6 +15,12 @@ use Filament\Tables\Table;
 use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Forms\Components\DatePicker;
+
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\DateTimePicker;
+
 
 class BookingResource extends Resource
 {
@@ -29,53 +35,129 @@ class BookingResource extends Resource
 
 
 
-    public static function form(Schema $schema): Schema
+           public static function form(Schema $schema): Schema
     {
         return $schema
+            ->columns(2)
             ->components([
                 Forms\Components\TextInput::make('customer_name')
+                    ->label('Nom du client')
                     ->required()
-                    ->label('Nom du client'),
+                    ->columnSpanFull(),
 
                 Forms\Components\Select::make('room_id')
-                    ->relationship('room', 'number')
-                    ->live()
-                    ->required()
                     ->label('Chambre N°')
-                    ->afterStateUpdated(function ($get, $set) {
-                        self::calculerPrixTotal($get, $set);
+                    ->relationship('room', 'number')
+                    ->required()
+                    ->searchable()
+                    ->preload()
+                    ->live()
+                    ->afterStateUpdated(function ($state, $set, $get) {
+                        static::calculerTarifDynamique($get, $set);
                     }),
 
                 Forms\Components\DatePicker::make('check_in')
-                    ->live()
-                    ->required()
                     ->label('Date d\'arrivée')
-                    ->native(false)
-                    ->afterStateUpdated(function ($get, $set) {
-                        self::calculerPrixTotal($get, $set);
+                    ->default(now())
+                    ->required()
+                    ->live()
+                    ->afterStateUpdated(fn ($get, $set) => static::calculerTarifDynamique($get, $set)),
+
+                // Durée en heures pour le type passage (Masqué si classique)
+                Forms\Components\Select::make('nombre_heures')
+                    ->label('Durée du passage (Heures)')
+                    ->options([
+                        1 => '1 Heure de passage',
+                        2 => '2 Heures de passage',
+                        3 => '3 Heures de passage',
+                        4 => '4 Heures de passage',
+                    ])
+                    ->default(1)
+                    ->required()
+                    ->live()
+                    ->dehydrated(false) // Champ virtuel, ne s'envoie pas en BDD
+                    ->visible(function ($get) {
+                        $roomId = $get('room_id');
+                        if (! $roomId) return false;
+                        $room = \App\Models\Room::with('roomType')->find($roomId);
+                        $type = strtolower($room?->roomType?->name ?? '');
+                        return str_contains($type, 'passage') || str_contains($type, 'heure');
+                    })
+                    ->afterStateUpdated(function ($state, $get, $set) {
+                        if ($get('check_in')) {
+                            $set('check_out', $get('check_in'));
+                        }
+                        static::calculerTarifDynamique($get, $set);
                     }),
 
+                // TOUJOURS VISIBLE mais verrouillé si c'est un passage (Règle l'erreur 1364)
                 Forms\Components\DatePicker::make('check_out')
-                    ->live()
-                    ->required()
                     ->label('Date de départ')
-                    ->native(false)
-                    ->afterStateUpdated(function ($get, $set) {
-                        self::calculerPrixTotal($get, $set);
+                    ->default(now()->addDay())
+                    ->required()
+                    ->live()
+                    ->dehydrated() // Force l'envoi en BDD
+                    ->readOnly(function ($get) {
+                        $roomId = $get('room_id');
+                        if (! $roomId) return false;
+                        $room = \App\Models\Room::with('roomType')->find($roomId);
+                        $type = strtolower($room?->roomType?->name ?? '');
+                        return str_contains($type, 'passage') || str_contains($type, 'heure');
                     })
-                    ->rules([
-                        'after_or_equal:check_in',
-                    ]),
+                    ->afterStateUpdated(fn ($get, $set) => static::calculerTarifDynamique($get, $set)),
 
-                // AJOUT/CORRECTION : Ce champ doit être présent et configuré ainsi
+                // TOUJOURS VISIBLE mais verrouillé si c'est un passage (Règle l'erreur 1364)
                 Forms\Components\TextInput::make('total_price')
+                    ->label('Prix Total')
                     ->numeric()
-                    ->prefix('€')
-                    ->required() // Requis par la base de données
-                    ->dehydrated() // Force l'envoi de la valeur lors de la sauvegarde
-                    ->label('Prix Total'),
+                    ->required()
+                    ->prefix('FCFA')
+                    ->dehydrated() // Force l'envoi en BDD
+                    ->readOnly(function ($get) {
+                        $roomId = $get('room_id');
+                        if (! $roomId) return false;
+                        $room = \App\Models\Room::with('roomType')->find($roomId);
+                        $type = strtolower($room?->roomType?->name ?? '');
+                        return str_contains($type, 'passage') || str_contains($type, 'heure');
+                    }),
             ]);
     }
+
+
+/**
+ * Alignement complet des calculs sur la structure de votre base de données
+ */
+public static function calculerTarifDynamique($get, $set): void
+{
+    $roomId = $get('room_id');
+    $start = $get('check_in');
+
+    if (!empty($roomId) && !empty($start)) {
+        $room = Room::with('roomType')->find($roomId);
+        $typeChambre = strtolower($room?->roomType?->name ?? '');
+        $prixUnitaire = $room?->roomType?->base_price ?? 0;
+
+        // Formule de Passage à l'heure
+        if (str_contains($typeChambre, 'passage') || str_contains($typeChambre, 'heure')) {
+            $heures = (int) ($get('nombre_heures') ?? 1);
+
+            // On enregistre le même jour dans check_out car le type BDD est "date" sans heure
+            $set('check_out', $start);
+            // Calcul du prix total basé sur le nombre d'heures
+            $set('total_price', $heures * $prixUnitaire);
+        }
+        // Formule Hôtelière classique (Nuitée)
+        else {
+            $end = $get('check_out');
+            if ($end) {
+                $debut = Carbon::make($start);
+                $fin = Carbon::make($end);
+                $jours = max(1, $debut->diffInDays($fin));
+                $set('total_price', $jours * $prixUnitaire);
+            }
+        }
+    }
+}
 
     public static function calculerPrixTotal($get, $set): void
     {

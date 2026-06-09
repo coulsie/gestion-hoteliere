@@ -29,11 +29,40 @@ class Booking extends Model
     /**
      * Relation : Une réservation peut être associée à une carte d'accès magnétique
      */
-   
+
     public function keyCard(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(KeyCard::class);
     }
+
+/**
+ * Calcule le montant total théorique de la chambre pour ce séjour
+ */
+    
+/**
+ * Calcule le montant total théorique du séjour (Prend en compte les jours ou les heures)
+ */
+public function getMontantTotalChambreAttribute(): float
+{
+    $debut = \Illuminate\Support\Carbon::parse($this->start_date ?? $this->created_at);
+    $fin = \Illuminate\Support\Carbon::parse($this->end_date ?? now());
+
+    // Récupère le nom de la catégorie (ex: "Chambre de passage")
+    $typeChambre = strtolower($this->room?->roomType?->name ?? '');
+    $prixBase = $this->room?->roomType?->base_price ?? 0;
+
+    // Détection automatique : Si c'est une formule de passage ou à l'heure
+    if (str_contains($typeChambre, 'passage') || str_contains($typeChambre, 'heure')) {
+        // Calcule le nombre d'heures réelles (minimum 1 heure facturée)
+        $heures = max(1, $debut->diffInHours($fin));
+        return (float) ($heures * $prixBase);
+    }
+
+    // Sinon, tarification standard à la nuitée / jour
+    $jours = max(1, $debut->diffInDays($fin));
+    return (float) ($jours * $prixBase);
+}
+
 
 }
 
