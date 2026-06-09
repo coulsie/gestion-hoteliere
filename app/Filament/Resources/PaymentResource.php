@@ -39,10 +39,13 @@ class PaymentResource extends Resource
             ->components([
                 Select::make('event_booking_id')
                     ->label('Réservation concernée')
-                    // Correction définitive : Passage strict des 2 arguments positionnels requis
+                    // Correction : On utilise 'eventBooking' (le nom exact de la fonction dans votre modèle Payment)
                     ->relationship('eventBooking', 'id')
                     ->required()
-                    ->searchable(),
+                    ->searchable()
+                    ->preload()
+                    // Affiche une ligne claire contenant l'ID et le numéro de chambre pour le caissier
+                    ->getOptionLabelFromRecordUsing(fn ($record) => "Réservation N° {$record->id} - Chambre " . ($record->room?->number ?? 'N/A')),
 
                 TextInput::make('receipt_number')
                     ->label('Numéro de Reçu')

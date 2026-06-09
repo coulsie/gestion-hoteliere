@@ -26,10 +26,13 @@ class Payment extends Model
         'paid_at' => 'datetime',
     ];
 
-    // Relation avec la réservation d'espace
+    /**
+     * Relation corrigée : On lie la méthode eventBooking au modèle Booking (Chambres)
+     * en spécifiant explicitement votre clé étrangère 'event_booking_id'.
+     */
     public function eventBooking(): BelongsTo
     {
-        return $this->belongsTo(EventBooking::class);
+        return $this->belongsTo(Booking::class, 'event_booking_id');
     }
 
     // Relation avec l'utilisateur/caissier qui a enregistré le paiement

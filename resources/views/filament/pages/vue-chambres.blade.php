@@ -1,68 +1,69 @@
 <x-filament-panels::page class="max-w-full w-full">
 
-    <!-- Injection de Styles CSS Personnalisés -->
+    <!-- Injection de Styles CSS Ultra-Éclatants -->
     <style>
         .hotel-card {
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
         }
-        /* Effet de zoom et augmentation de l'ombre néon au survol */
+        /* Effet de lévitation et amplification de la lueur néon au survol */
         .hotel-card:hover {
-            transform: translateY(-8px) scale(1.02);
+            transform: translateY(-10px) scale(1.03);
         }
         .neon-shadow-emerald {
-            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4), 0 8px 10px -6px rgba(16, 185, 129, 0.4);
+            box-shadow: 0 15px 30px -5px rgba(5, 245, 165, 0.45), 0 10px 15px -6px rgba(5, 245, 165, 0.45);
         }
         .neon-shadow-emerald:hover {
-            box-shadow: 0 20px 35px -5px rgba(16, 185, 129, 0.6), 0 12px 15px -6px rgba(16, 185, 129, 0.6);
+            box-shadow: 0 25px 45px -5px rgba(5, 245, 165, 0.7), 0 15px 20px -6px rgba(5, 245, 165, 0.7);
         }
         .neon-shadow-red {
-            box-shadow: 0 10px 25px -5px rgba(220, 38, 38, 0.4), 0 8px 10px -6px rgba(220, 38, 38, 0.4);
+            box-shadow: 0 15px 30px -5px rgba(255, 46, 99, 0.45), 0 10px 15px -6px rgba(255, 46, 99, 0.45);
         }
         .neon-shadow-red:hover {
-            box-shadow: 0 20px 35px -5px rgba(220, 38, 38, 0.6), 0 12px 15px -6px rgba(220, 38, 38, 0.6);
+            box-shadow: 0 25px 45px -5px rgba(255, 46, 99, 0.7), 0 15px 20px -6px rgba(255, 46, 99, 0.7);
         }
-        .neon-shadow-amber {
-            box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.4), 0 8px 10px -6px rgba(245, 158, 11, 0.4);
+        .neon-shadow-purple {
+            box-shadow: 0 15px 30px -5px rgba(186, 12, 247, 0.45), 0 10px 15px -6px rgba(186, 12, 247, 0.45);
         }
-        .neon-shadow-amber:hover {
-            box-shadow: 0 20px 35px -5px rgba(245, 158, 11, 0.6), 0 12px 15px -6px rgba(245, 158, 11, 0.6);
+        .neon-shadow-purple:hover {
+            box-shadow: 0 25px 45px -5px rgba(186, 12, 247, 0.7), 0 15px 20px -6px rgba(186, 12, 247, 0.7);
         }
-        /* Animation discrète pour le badge de rafraîchissement */
-        @keyframes pulse-soft {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
+        /* Animation fluide pour l'indicateur de surveillance Live */
+        @keyframes pulse-neon {
+            0%, 100% { transform: scale(1); opacity: 1; box-shadow: 0 0 12px #05f5a5; }
+            50% { transform: scale(1.2); opacity: 0.6; box-shadow: 0 0 4px #05f5a5; }
         }
         .pulse-element {
-            animation: pulse-soft 2s infinite;
+            animation: pulse-neon 1.5s infinite ease-in-out;
         }
     </style>
 
     <!-- Barre d'outils du haut : Filtres + Indicateur Live-Script -->
-    <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-gray-100 dark:border-white/5 mb-6">
+    <div class="flex flex-wrap items-center justify-between gap-3 pb-5 border-b border-gray-200 dark:border-white/10 mb-6">
         <div class="flex flex-wrap items-center gap-3">
-            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider mr-2">Filtrer par :</span>
+            <span class="text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest mr-2">Filtrer par :</span>
 
-            <x-filament::button wire:click="setFilter('all')" color="{{ $statusFilter === 'all' ? 'primary' : 'gray' }}" size="sm" icon="heroicon-m-funnel">
+            <x-filament::button wire:click="setFilter('all')" color="{{ $statusFilter === 'all' ? 'primary' : 'gray' }}" size="sm" icon="heroicon-m-funnel" class="font-bold shadow-sm">
                 Toutes les chambres
             </x-filament::button>
 
-            <x-filament::button wire:click="setFilter('disponible')" color="{{ $statusFilter === 'disponible' ? 'success' : 'gray' }}" size="sm" icon="heroicon-m-check-circle">
+            <x-filament::button wire:click="setFilter('disponible')" color="success" size="sm" icon="heroicon-m-check-circle" class="font-bold {{ $statusFilter === 'disponible' ? 'ring-2 ring-emerald-400 brightness-110' : 'opacity-60 hover:opacity-100' }}">
                 Disponibles
             </x-filament::button>
 
-            <x-filament::button wire:click="setFilter('occupee')" color="{{ $statusFilter === 'occupee' ? 'danger' : 'gray' }}" size="sm" icon="heroicon-m-user">
+            <x-filament::button wire:click="setFilter('occupee')" color="danger" size="sm" icon="heroicon-m-user" class="font-bold {{ $statusFilter === 'occupee' ? 'ring-2 ring-rose-400 brightness-110' : 'opacity-60 hover:opacity-100' }}">
                 Occupées (Calendrier)
             </x-filament::button>
 
-            <x-filament::button wire:click="setFilter('menage')" color="{{ $statusFilter === 'menage' ? 'warning' : 'gray' }}" size="sm" icon="heroicon-m-sparkles">
+            <x-filament::button wire:click="setFilter('menage')" color="warning" size="sm" icon="heroicon-m-sparkles" class="font-bold {{ $statusFilter === 'menage' ? 'ring-2 ring-amber-400 brightness-110' : 'opacity-60 hover:opacity-100' }}">
                 En ménage
             </x-filament::button>
         </div>
 
-        <!-- Petit indicateur visuel géré en JS pour simuler la surveillance temps réel -->
-        <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10">
-            <span class="h-2 w-2 rounded-full bg-emerald-500 pulse-element"></span>
-            <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Surveillance Live Active</span>
+        <!-- Indicateur Visuel Haute Visibilité -->
+        <div class="flex items-center gap-2.5 px-4 py-2 rounded-full bg-emerald-500/10 dark:bg-emerald-500/5 border border-emerald-500/30">
+            <span class="h-2.5 w-2.5 rounded-full bg-[#05f5a5] pulse-element"></span>
+            <span class="text-xs font-black text-emerald-600 dark:text-[#05f5a5] uppercase tracking-wider">Surveillance Live Active</span>
         </div>
     </div>
 
@@ -71,47 +72,63 @@
         @forelse($chambres as $chambre)
             @php
                 [$cardBg, $shadowClass, $textColor, $subTextColor, $badgeStyle, $icon, $statusLabel] = match($chambre->statut_calculer) {
+                    // Vert Électrique / Menthe Éclatante
                     'disponible' => [
-                        'bg-gradient-to-br from-emerald-500 to-teal-600', 'neon-shadow-emerald',
-                        'text-white', 'text-emerald-100',
-                        'bg-black/20 text-white border-white/30', 'heroicon-o-check-circle', 'Disponible'
+                        'bg-gradient-to-br from-[#05f5a5] to-[#00b4d8]', 'neon-shadow-emerald',
+                        'text-slate-950', 'text-slate-900 font-bold',
+                        'bg-slate-950/10 text-slate-950 border-slate-950/20', 'heroicon-o-check-circle', 'Disponible'
                     ],
+                    // Rouge Flash / Rose Néon Intense
                     'occupee' => [
-                        'bg-gradient-to-br from-red-500 to-rose-600', 'neon-shadow-red',
+                        'bg-gradient-to-br from-[#ff2e93] to-[#ff8e53]', 'neon-shadow-red',
                         'text-white', 'text-rose-100',
                         'bg-black/20 text-white border-white/30', 'heroicon-o-user', 'Occupée'
                     ],
+                    // Violet Électrique / Orange Éclatant
                     'menage' => [
-                        'bg-gradient-to-br from-amber-500 to-orange-500', 'neon-shadow-amber',
-                        'text-white', 'text-amber-100',
+                        'bg-gradient-to-br from-[#ba0cf7] to-[#ff6b6b]', 'neon-shadow-purple',
+                        'text-white', 'text-purple-100',
                         'bg-black/20 text-white border-white/30', 'heroicon-o-sparkles', 'En Ménage'
                     ],
                     default => [
-                        'bg-gradient-to-br from-slate-500 to-slate-600', 'shadow-lg',
-                        'text-white', 'text-slate-100',
+                        'bg-gradient-to-br from-slate-600 to-slate-800', 'shadow-lg',
+                        'text-white', 'text-slate-200',
                         'bg-black/20 text-white border-white/30', 'heroicon-o-no-symbol', 'Inconnu'
                     ]
                 };
             @endphp
 
             <!-- Case de la chambre stylisée avec dégradé vif, ombres néon et animations -->
-            <div class="hotel-card {{ $cardBg }} {{ $shadowClass }} p-6 rounded-2xl flex flex-col justify-between"
-                 style="flex: 1 1 260px; max-w: 320px; min-height: 210px;">
+            <div class="hotel-card {{ $cardBg }} {{ $shadowClass }} p-6 rounded-3xl flex flex-col justify-between"
+                 style="flex: 1 1 260px; max-w: 320px; min-height: 220px;">
 
                 <div>
-                    <!-- En-tête de case : Numéro augmenté et Badge -->
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-3xl font-black {{ $textColor }} tracking-tight border-b-2 border-white/20 pb-0.5">
-                            N° {{ $chambre->number }}
-                        </h3>
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-black uppercase rounded-lg border {{ $badgeStyle }}">
-                            <x-filament::icon :icon="$icon" class="h-3.5 w-3.5" />
+                     <!-- En-tête de case : Style Hôtel Premium & Éclat Visuel -->
+                    <div class="flex items-center justify-between gap-2 pb-3 mb-2 border-b border-white/20">
+
+                        <!-- Numéro de la chambre avec ombre portée et lettrage compact -->
+                        <div class="flex items-baseline gap-1">
+                            <span class="text-xs font-black uppercase tracking-widest opacity-60 {{ $textColor }}">Chambre</span>
+                            <h3 class="text-3xl font-black {{ $textColor }} tracking-tighter drop-shadow-sm">
+                                {{ $chambre->number }}
+                            </h3>
+                        </div>
+
+                        <!-- Badge d'état dynamique à haute visibilité et effet miroir -->
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-full border shadow-sm backdrop-blur-xl transition-all duration-300 hover:scale-105 {{ $badgeStyle }}">
+                            <span class="relative flex h-2 w-2">
+                                <!-- Point lumineux clignotant intégré au badge pour l'effet "Live" -->
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-current opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-current"></span>
+                            </span>
+                            <x-filament::icon :icon="$icon" class="h-3.5 w-3.5 stroke-[3]" />
                             {{ $statusLabel }}
                         </span>
+
                     </div>
 
                     <!-- Catégorie de chambre -->
-                    <div class="mt-4 flex items-center gap-2 {{ $subTextColor }}">
+                    <div class="mt-5 flex items-center gap-2 {{ $subTextColor }}">
                         <x-filament::icon icon="heroicon-o-home" class="h-4 w-4 opacity-90" />
                         <p class="text-xs font-black tracking-widest uppercase">
                             {{ $chambre->roomType->name }}
@@ -120,15 +137,15 @@
 
                     <!-- Bloc détails du planning -->
                     @if($chambre->statut_calculer === 'occupee')
-                        <div class="mt-4 p-2.5 rounded-xl bg-black/30 text-white text-xs space-y-1 border border-white/10 shadow-inner backdrop-blur-sm">
-                            <div class="truncate">👤 Client : <span class="font-bold text-white">{{ $chambre->client_actuel }}</span></div>
-                            <div class="mt-1">📅 Libération : <span class="font-bold text-yellow-300">{{ $chambre->date_depart }}</span></div>
+                        <div class="mt-4 p-3 rounded-2xl bg-black/40 text-white text-xs space-y-1.5 border border-white/10 shadow-inner backdrop-blur-md">
+                            <div class="truncate flex items-center gap-1">👤 Client : <span class="font-bold text-white">{{ $chambre->client_actuel }}</span></div>
+                            <div class="mt-1 flex items-center gap-1">📅 Départ : <span class="font-black text-[#05f5a5]">{{ $chambre->date_depart }}</span></div>
                         </div>
                     @endif
                 </div>
 
                 <!-- Pied de case : Bouton d'action épuré et arrondi -->
-                <div class="mt-5 pt-3 border-t border-white/10 flex justify-end">
+                <div class="mt-5 pt-3 border-t border-current/10 flex justify-end">
                     <x-filament::button
                         href="{{ url('/admin/bookings') }}"
                         tag="a"
@@ -136,7 +153,7 @@
                         size="sm"
                         icon="heroicon-m-cog-6-tooth"
                         icon-position="before"
-                        class="font-black text-gray-900 bg-white hover:bg-gray-100 shadow rounded-xl border-transparent"
+                        class="font-black text-slate-950 bg-white hover:bg-slate-100 shadow-md rounded-xl border-transparent transition-all"
                     >
                         Gérer
                     </x-filament::button>
@@ -144,23 +161,29 @@
 
             </div>
         @empty
-            <div class="w-full text-center py-12 text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-white/5 rounded-xl border border-dashed border-gray-200 dark:border-white/10">
-                <x-filament::icon icon="heroicon-o-no-symbol" class="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                <p class="text-sm font-medium">Aucune chambre ne correspond à ce critère actuellement.</p>
+            <div class="w-full text-center py-16 text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-white/5 rounded-2xl border border-dashed border-gray-300 dark:border-white/15">
+                <x-filament::icon icon="heroicon-o-no-symbol" class="h-10 w-10 mx-auto mb-3 text-gray-400" />
+                <p class="text-sm font-bold uppercase tracking-wider">Aucune chambre ne correspond à ce critère actuellement.</p>
             </div>
         @endforelse
     </div>
 
-    <!-- Script JavaScript pour le rafraîchissement intelligent sans clignotement -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Le script vérifie toutes les 10 secondes si des modifications ont eu lieu en BDD
-            // En utilisant le moteur Livewire natif pour rafraîchir en douceur l'arrière-plan
-            setInterval(() => {
-                if (window.Livewire) {
-                    window.Livewire.dispatch('refresh');
-                }
-            }, 10000);
-        });
-    </script>
 </x-filament-panels::page>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Configure l'intervalle de rafraîchissement (10000 ms = 10 secondes)
+        const INTERVALLE_RAFRAICHISSEMENT = 10000;
+
+        setInterval(() => {
+            // Vérifie si le composant Livewire Filament est disponible sur la page
+            const composantLivewire = window.Livewire;
+
+            if (composantLivewire) {
+                // Déclenche l'action de mise à jour native de Livewire
+                composantLivewire.dispatch('$refresh');
+                console.log('🔄 Statuts des chambres actualisés en direct.');
+            }
+        }, INTERVALLE_RAFRAICHISSEMENT);
+    });
+</script>

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use App\Models\RoomType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\PaymentReceiptController;
 
 // Affiche la page d'accueil
 Route::get('/', function () {
@@ -40,3 +41,9 @@ Route::post('/connexion', function (Request $request) {
         'email' => 'Les identifiants fournis ne correspondent pas à nos enregistrements.',
     ])->onlyInput('email');
 });
+
+
+// Cette route correspond exactement au ->route('payment.receipt.download') écrit dans votre PaymentResource
+Route::get('/admin/payments/{record}/receipt', [PaymentReceiptController::class, 'download'])
+    ->name('payment.receipt.download')
+    ->middleware(['auth']); // Sécurise l'accès aux reçus
