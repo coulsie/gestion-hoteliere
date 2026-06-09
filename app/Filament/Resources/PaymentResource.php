@@ -39,6 +39,7 @@ class PaymentResource extends Resource
             ->components([
                 Select::make('event_booking_id')
                     ->label('Réservation concernée')
+                    // Correction définitive : Passage strict des 2 arguments positionnels requis
                     ->relationship('eventBooking', 'id')
                     ->required()
                     ->searchable(),
@@ -96,8 +97,10 @@ class PaymentResource extends Resource
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('eventBooking.id')
-                    ->label('Réf. Réservation'),
+                // Alignement Filament v4 sur la clé étrangère directe
+                TextColumn::make('event_booking_id')
+                    ->label('Réf. Réservation')
+                    ->sortable(),
 
                 TextColumn::make('amount')
                     ->label('Montant')
@@ -156,25 +159,20 @@ class PaymentResource extends Resource
                         );
                     }),
             ])
-                       ->actions([
-                // Action de modification unifiée (sans "Tables")
+            ->actions([
                 \Filament\Actions\EditAction::make(),
 
-                // Action générique unifiée pour le bouton d'impression
                 \Filament\Actions\Action::make('print_receipt')
                     ->label('Imprimer Reçu')
                     ->icon('heroicon-o-printer')
                     ->color('success')
                     ->action(fn ($record) => redirect()->route('payment.receipt.download', $record)),
             ])
-
-                        ->bulkActions([
-                // Utilisation du namespace unifié sans "Tables"
+            ->bulkActions([
                 \Filament\Actions\BulkActionGroup::make([
                     \Filament\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
-
     }
 
     public static function getRelations(): array

@@ -10,7 +10,7 @@ use App\Models\EventSpace;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Tables\Table; // Import requis pour la table
+use Filament\Tables\Table;
 
 class EventSpaceResource extends Resource
 {
@@ -20,18 +20,26 @@ class EventSpaceResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    // Conserve Schema ici (exigé par votre framework pour le formulaire)
+    // Propriétés de traduction pour le menu et l'interface en français
+    protected static ?string $navigationLabel = 'Espaces Événementiels';
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Gestion des Espaces';
+
+    protected static ?string $pluralModelLabel = 'Espaces Événementiels';
+
+    protected static ?string $modelLabel = 'Espace Événementiel';
+
     public static function form(Schema $schema): Schema
     {
         return $schema
             ->components([
                 \Filament\Forms\Components\TextInput::make('name')
+                    ->label('Nom de l\'espace') // Libellé du champ traduit
                     ->required()
                     ->maxLength(255),
             ]);
     }
 
-    // REMISE EN PLACE de Table ici (exigé par votre framework pour la table)
     public static function table(Table $table): Table
     {
         return EventSpacesTable::configure($table);

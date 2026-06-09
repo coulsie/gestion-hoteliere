@@ -22,6 +22,13 @@ class BookingResource extends Resource
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $navigationLabel = 'Réservations de Chambres';
+    protected static string|\UnitEnum|null $navigationGroup = 'Gestion Hôtelière';
+    protected static ?string $pluralModelLabel = 'Réservations de Chambres';
+    protected static ?string $modelLabel = 'Réservation';
+
+
+
     public static function form(Schema $schema): Schema
     {
         return $schema

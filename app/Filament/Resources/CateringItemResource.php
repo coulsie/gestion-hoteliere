@@ -19,6 +19,11 @@ class CateringItemResource extends Resource
     protected static ?string $model = CateringItem::class;
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-cake';
+    protected static ?string $navigationLabel = 'Services Restauration';
+    protected static string|\UnitEnum|null $navigationGroup = 'Gestion des Espaces';
+    protected static ?string $pluralModelLabel = 'Services Restauration';
+    protected static ?string $modelLabel = 'Service Restauration';
+
 
     // Signature native v5 avec Schema et components
     public static function form(Schema $schema): Schema
@@ -83,7 +88,7 @@ class CateringItemResource extends Resource
         return [];
     }
 
-    
+
     public static function getPages(): array
     {
         return [

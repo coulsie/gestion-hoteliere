@@ -21,6 +21,11 @@ class EventBookingResource extends Resource
     protected static ?string $model = EventBooking::class;
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-calendar-days';
+    protected static ?string $navigationLabel = 'Réservations d\'Événements';
+    protected static string|\UnitEnum|null $navigationGroup = 'Gestion des Espaces';
+    protected static ?string $pluralModelLabel = 'Réservations d\'Événements';
+    protected static ?string $modelLabel = 'Réservation d\'Événement';
+
 
     public static function form(Schema $schema): Schema
     {
@@ -64,26 +69,35 @@ class EventBookingResource extends Resource
             ]);
     }
 
-    public static function calculerPrixEvenement($get, $set): void
-    {
-        $start = $get('start_time');
-        $end = $get('end_time');
-        $spaceId = $get('event_space_id');
+   public static function calculerPrixEvenement($get, $set): void
+{
+    $start = $get('start_time');
+    $end = $get('end_time');
+    $spaceId = $get('event_space_id');
 
-        if ($start && $end && $spaceId) {
-            $debut = Carbon::parse($start);
-            $fin = Carbon::parse($end);
+    // On vérifie rigoureusement que les données ne sont ni nulles ni vides
+    if (!empty($start) && !empty($end) && !empty($spaceId)) {
+        // Utilisation de Carbon::make() pour éviter le bug d'argument manquant
+        $debut = \Illuminate\Support\Carbon::make($start);
+        $fin = \Illuminate\Support\Carbon::make($end);
+
+        // Sécurité si les dates n'ont pas pu être lues par Carbon
+        if ($debut && $fin) {
             $heures = $debut->diffInHours($fin);
 
             if ($heures > 0) {
-                $espace = EventSpace::find($spaceId);
+                $espace = \App\Models\EventSpace::find($spaceId);
                 $tarifHoraire = $espace?->hourly_rate ?? 0;
                 $set('total_amount', $heures * $tarifHoraire);
             } else {
                 $set('total_amount', 0);
             }
         }
+    } else {
+        $set('total_amount', 0);
     }
+}
+
 
     public static function table(Table $table): Table
     {

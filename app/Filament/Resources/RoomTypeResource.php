@@ -24,6 +24,11 @@ class RoomTypeResource extends Resource
     protected static bool $shouldSkipAuthorization = true; // <-- AJOUTEZ CETTE LIGNE
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationLabel = 'Types de Chambres';
+    protected static string|\UnitEnum|null $navigationGroup = 'Configuration';
+    protected static ?string $pluralModelLabel = 'Types de Chambres';
+    protected static ?string $modelLabel = 'Type de Chambre';
+
 
     public static function form(Schema $schema): Schema
     {

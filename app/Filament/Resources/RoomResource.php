@@ -21,6 +21,11 @@ class RoomResource extends Resource
     protected static bool $shouldSkipAuthorization = true; // <-- AJOUTEZ CETTE LIGNE
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationLabel = 'Chambres';
+    protected static string|\UnitEnum|null $navigationGroup = 'Configuration';
+    protected static ?string $pluralModelLabel = 'Chambres';
+    protected static ?string $modelLabel = 'Chambre';
+
 
     // Formulaire de saisie standard v5
     public static function form(Schema $schema): Schema
