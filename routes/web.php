@@ -1,49 +1,79 @@
 <?php
 
-
-
-
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PaymentReceiptController;
+use App\Models\Payment;
 use App\Models\RoomType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\PaymentReceiptController;
+use Illuminate\Support\Facades\Route;
 
-// Affiche la page d'accueil
+/*
+|--------------------------------------------------------------------------
+| 1. Routes Publiques (Visiteurs)
+|--------------------------------------------------------------------------
+*/
+
+// Page d'accueil avec la liste des types de chambres
 Route::get('/', function () {
     $typesChambres = RoomType::all();
     return view('accueil', compact('typesChambres'));
 });
 
-// Affiche le formulaire de connexion (GET)
+/*
+|--------------------------------------------------------------------------
+| 2. Authentification (Connexion)
+|--------------------------------------------------------------------------
+*/
+
+// Affichage du formulaire de connexion
 Route::get('/connexion', function () {
     return view('connexion');
-})->name('login'); // L'alias 'login' est requis par Laravel
+})->name('login'); // L'alias 'login' est requis par Laravel pour les redirections de sécurité
 
-// Traite la soumission du formulaire de connexion (POST)
+// Traitement du formulaire de connexion
 Route::post('/connexion', function (Request $request) {
-    // 1. Validation des champs de saisie
+    // Validation des données saisies
     $credentials = $request->validate([
         'email' => ['required', 'email'],
         'password' => ['required'],
     ]);
 
-    // 2. Tentative de connexion de l'utilisateur
+    // Tentative de connexion de l'utilisateur
     if (Auth::attempt($credentials, $request->has('customCheck'))) {
         $request->session()->regenerate();
-
-        // Redirige vers l'accueil ou l'espace client
         return redirect()->intended('/');
     }
 
-    // 3. Retour en arrière avec une erreur si les identifiants sont faux
+    // Retour avec une erreur si les identifiants sont invalides
     return back()->withErrors([
         'email' => 'Les identifiants fournis ne correspondent pas à nos enregistrements.',
     ])->onlyInput('email');
 });
 
+/*
+|--------------------------------------------------------------------------
+| 3. Gestion de la Comptabilité & Reçus (Sécurisés par Auth)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth'])->group(function () {
 
-// Cette route correspond exactement au ->route('payment.receipt.download') écrit dans votre PaymentResource
-Route::get('/admin/payments/{record}/receipt', [PaymentReceiptController::class, 'download'])
-    ->name('payment.receipt.download')
-    ->middleware(['auth']); // Sécurise l'accès aux reçus
+    // Route de téléchargement depuis l'historique financier de PaymentResource
+    Route::get('/admin/payments/{record}/receipt', [PaymentReceiptController::class, 'download'])
+        ->name('payment.receipt.download');
+
+    // Nouvelle route pour l'ouverture du reçu en plein écran (Bouton d'encaissement direct)
+   
+
+    // Nouvelle route pour l'ouverture du reçu en plein écran
+    Route::get('/payments/{payment}/receipt', function (Payment $payment) {
+        // On charge la relation pour être sûr qu'elle ne soit pas nulle
+        // REMARQUE : Si votre relation s'appelle 'booking' et non 'eventBooking', écrivez 'booking' ci-dessous
+        $payment->load('eventBooking.room.roomType');
+
+        return view('pdf.receipt', [
+            'payment' => $payment,
+            'booking' => $payment->eventBooking ?? $payment->booking,
+        ]);
+    })->name('payments.receipt');
+
+});
