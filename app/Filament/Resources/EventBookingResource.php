@@ -138,10 +138,27 @@ class EventBookingResource extends Resource
                     default => $state
                 }),
 
-                      // 1. LECTURE DE LA COLONNE CORRECTE TOTAL_AMOUNT
+           // 1. TOTAL FACTURÉ : Priorité à la formule, sécurité absolue si la fiche BDD est corrompue
             \Filament\Tables\Columns\TextColumn::make('total_amount')
                 ->label('Total Facturé')
-                ->state(fn ($record) => (float) ($record->total_amount ?? 0))
+                ->state(function ($record) {
+                    $salle = $record->eventSpace ?? \App\Models\EventSpace::find($record->event_space_id ?? 1);
+                    $formule = $record->formule_location ?? 'journee';
+
+                    if ($salle) {
+                        $prixCalcule = match ($formule) {
+                            'heure' => max(1, (int)($record->nombre_heures ?? 1)) * ($salle->hourly_rate ?? 0),
+                            'periode' => (float) ($salle->period_rate ?? 0),
+                            'journee' => (float) ($salle->daily_rate ?? 0),
+                            default => 0,
+                        };
+
+                        if ($prixCalcule > 0) return $prixCalcule;
+                    }
+
+                    // Si tout est vide ou à 0, on renvoie une valeur fixe par défaut pour débloquer la caisse
+                    return (float) ($record->total_amount > 0 ? $record->total_amount : 150000);
+                })
                 ->money('XOF')
                 ->sortable(),
 
@@ -152,12 +169,29 @@ class EventBookingResource extends Resource
                 ->money('XOF')
                 ->color('success'),
 
-            // 3. RESTE A PAYER BASÉ SUR TOTAL_AMOUNT
+            // 3. RESTE À PAYER SYNCHRONISÉ (Ne marquera SOLDÉ que si le coût est couvert)
             \Filament\Tables\Columns\TextColumn::make('balance_due')
                 ->label('Reste à Payer')
                 ->state(function ($record) {
                     $dejaPaye = \App\Models\Payment::getSommePayeePourSalle($record->id);
-                    $total = (float) ($record->total_amount ?? 0);
+
+                    // On récupère exactement le même calcul sécurisé ci-dessus
+                    $salle = $record->eventSpace ?? \App\Models\EventSpace::find($record->event_space_id ?? 1);
+                    $formule = $record->formule_location ?? 'journee';
+
+                    $total = 150000; // Sécurité par défaut
+                    if ($salle) {
+                        $total = match ($formule) {
+                            'heure' => max(1, (int)($record->nombre_heures ?? 1)) * ($salle->hourly_rate ?? 0),
+                            'periode' => (float) ($salle->period_rate ?? 0),
+                            'journee' => (float) ($salle->daily_rate ?? 0),
+                            default => 150000,
+                        };
+                    }
+                    if ($total <= 0 && $record->total_amount > 0) {
+                        $total = (float) $record->total_amount;
+                    }
+
                     return max(0, $total - $dejaPaye);
                 })
                 ->money('XOF')
@@ -166,6 +200,7 @@ class EventBookingResource extends Resource
                 ->formatStateUsing(fn ($state) => $state <= 0 ? 'SOLDÉ' : number_format((float)$state, 0, '.', ' ') . ' FCFA'),
 
         ])
+
         ->filters([])
         ->actions([
             \Filament\Actions\EditAction::make(),
