@@ -191,7 +191,12 @@ public static function calculerTarifDynamique($get, $set): void
                 Tables\Columns\TextColumn::make('room.number')->label('Chambre'),
                 Tables\Columns\TextColumn::make('check_in')->label('Arrivée')->date(),
                 Tables\Columns\TextColumn::make('check_out')->label('Départ')->date(),
-                Tables\Columns\TextColumn::make('total_price')->label('Total')->money('EUR'),
+                                Tables\Columns\TextColumn::make('total_price')
+                    ->label('Total')
+                    ->sortable()
+                    // Correction définitive utilisant la méthode officielle money()
+                    ->money(fn ($record) => $record->room?->roomType?->currency ?? 'XOF'),
+
             ])
             ->filters([])
             ->actions([
