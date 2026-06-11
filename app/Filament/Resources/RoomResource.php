@@ -27,76 +27,90 @@ class RoomResource extends Resource
     protected static ?string $modelLabel = 'Chambre';
 
     // Formulaire de saisie sécurisé contre les doublons
-    public static function form(Schema $schema): Schema
-    {
-        return $schema
-            ->components([
-                Forms\Components\TextInput::make('number')
-                    ->required()
-                    ->label('Numéro de chambre')
-                    // Ajout de la sécurité d'unicité pour bloquer les doublons (ex: chambre 31)
-                    ->unique(table: 'rooms', column: 'number', ignoreRecord: true)
-                    ->validationMessages([
-                        'unique' => 'Ce numéro de chambre est déjà attribué à un autre hébergement.',
-                    ]),
+   public static function form(Schema $schema): Schema
+{
+    return $schema
+        ->components([
+            Forms\Components\TextInput::make('number')
+                ->required()
+                ->label('Numéro de chambre')
+                ->unique(table: 'rooms', column: 'number', ignoreRecord: true)
+                ->validationMessages([
+                    'unique' => 'Ce numéro de chambre est déjà attribué à un autre hébergement.',
+                ]),
 
-                Forms\Components\Select::make('room_type_id')
-                    ->relationship('roomType', 'name')
-                    ->required()
-                    ->label('Type de chambre'),
+            Forms\Components\Select::make('room_type_id')
+                ->relationship('roomType', 'name')
+                ->required()
+                ->label('Type de chambre'),
 
-                Forms\Components\Select::make('status')
-                    ->options([
-                        'disponible' => 'Disponible',
-                        'occupee' => 'Occupée',
-                        'menage' => 'En cours de ménage',
-                    ])
-                    ->default('disponible')
-                    ->required()
-                    ->label('Statut'),
-            ]);
-    }
+            // SÉCURITÉ UNIFIÉE : Utilisation du champ officiel lié à vos automatisations de ménage
+            Forms\Components\Select::make('housekeeping_status')
+                ->label('État du ménage / Maintenance')
+                ->options([
+                    'propre' => '🧼 Propre & Prête',
+                    'sale' => '🍂 Sale (À nettoyer)',
+                    'en_cours' => '🧹 Ménage en cours',
+                    'maintenance' => '🛠️ En Maintenance',
+                ])
+                ->required()
+                ->default('propre'),
+        ]);
+}
+
 
     // Tableau d'affichage avec badges de couleur
-    public static function table(Table $table): Table
-    {
-        return $table
-            ->columns([
-                Tables\Columns\TextColumn::make('number')
-                    ->sortable()
-                    ->searchable()
-                    ->label('Chambre N°'),
+   public static function table(Table $table): Table
+{
+    return $table
+        ->columns([
+            Tables\Columns\TextColumn::make('number')
+                ->sortable()
+                ->searchable()
+                ->label('Chambre N°'),
 
-                Tables\Columns\TextColumn::make('roomType.name')
-                    ->label('Type'),
+            Tables\Columns\TextColumn::make('roomType.name')
+                ->label('Type'),
 
-                Tables\Columns\TextColumn::make('status')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'disponible' => 'success',
-                        'occupee' => 'danger',
-                        'menage' => 'warning',
-                        default => 'gray',
-                    })
-                    ->label('Statut'),
-            ])
-            ->filters([
-                Tables\Filters\SelectFilter::make('status')
-                    ->options([
-                        'disponible' => 'Disponible',
-                        'occupee' => 'Occupée',
-                        'menage' => 'En ménage',
-                    ])
-            ])
-            ->actions([
-                EditAction::make(),
-            ])
-            ->bulkActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
-            ]);
-    }
+            // SÉCURITÉ UNIFIÉE : Nouvelle colonne d'état avec couleur en badge
+            Tables\Columns\TextColumn::make('housekeeping_status')
+                ->label('État de la Chambre')
+                ->badge()
+                ->color(fn (string $state): string => match ($state) {
+                    'propre' => 'success',
+                    'sale' => 'danger',
+                    'en_cours' => 'warning',
+                    'maintenance' => 'gray',
+                    default => 'gray',
+                })
+                ->formatStateUsing(fn (string $state): string => match ($state) {
+                    'propre' => '🧼 PROPRE',
+                    'sale' => '🍂 SALE',
+                    'en_cours' => '🧹 EN COURS',
+                    'maintenance' => '🛠️ MAINTENANCE',
+                    default => $state,
+                }),
+        ])
+        ->filters([
+            // NOUVEAU FILTRE : Permet de voir instantanément uniquement les chambres sales à nettoyer
+            Tables\Filters\SelectFilter::make('housekeeping_status')
+                ->label('Filtrer par État')
+                ->options([
+                    'propre' => '🧼 Propre & Prête',
+                    'sale' => '🍂 Sale (À nettoyer)',
+                    'en_cours' => '🧹 Ménage en cours',
+                    'maintenance' => '🛠️ En Maintenance',
+                ])
+        ])
+        ->actions([
+            EditAction::make(),
+        ])
+        ->bulkActions([
+            BulkActionGroup::make([
+                DeleteBulkAction::make(),
+            ]),
+        ]);
+}
 
     public static function getRelations(): array
     {

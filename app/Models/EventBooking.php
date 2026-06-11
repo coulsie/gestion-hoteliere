@@ -7,9 +7,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EventBooking extends Model
 {
-    // La méthode doit s'appeler exactement "eventSpace"
+    // FIX SÉCURITÉ : Autorise l'enregistrement de tous les champs (client_name, etc.)
+    protected $guarded = [];
+
+    /**
+     * Relation : Une réservation d'événement est liée à un espace événementiel (salle)
+     */
     public function eventSpace(): BelongsTo
     {
-        return $this->belongsTo(EventSpace::class);
+        return $this->belongsTo(EventSpace::class, 'event_space_id');
     }
 }

@@ -35,89 +35,115 @@ class BookingResource extends Resource
 
 
 public static function form(Schema $schema): Schema
-    {
-        return $schema
-            ->columns(2)
-            ->components([
-                Forms\Components\TextInput::make('customer_name')
-                    ->label('Nom du client')
-                    ->required()
-                    ->columnSpanFull(),
+{
+    return $schema
+        ->columns(2)
+        ->components([
+            Forms\Components\TextInput::make('customer_name')
+                ->label('Nom du client')
+                ->required()
+                ->columnSpanFull(),
 
-                Forms\Components\Select::make('room_id')
-                    ->label('Chambre N°')
-                    ->relationship('room', 'number')
-                    ->required()
-                    ->searchable()
-                    ->preload()
-                    ->live()
-                    ->afterStateUpdated(function ($state, $set, $get) {
-                        static::calculerTarifDynamique($get, $set);
-                    }),
+            Forms\Components\Select::make('room_id')
+                ->label('Chambre N°')
+                ->relationship(
+                    name: 'room',
+                    titleAttribute: 'number',
+                    // SÉCURITÉ : N'affiche dans la liste que les chambres propres et prêtes
+                    modifyQueryUsing: fn ($query) => $query->where('housekeeping_status', 'propre')
+                )
+                ->required()
+                ->searchable()
+                ->preload()
+                ->live()
+                ->afterStateUpdated(function ($state, $set, $get) {
+                    static::calculerTarifDynamique($get, $set);
+                }),
 
-                Forms\Components\DatePicker::make('check_in')
-                    ->label('Date d\'arrivée')
-                    ->default(now())
-                    ->required()
-                    ->live()
-                    ->afterStateUpdated(fn ($get, $set) => static::calculerTarifDynamique($get, $set)),
 
-                Forms\Components\Select::make('nombre_heures')
-                    ->label('Durée du passage (Heures)')
-                    ->options([
-                        1 => '1 Heure de passage',
-                        2 => '2 Heures de passage',
-                        3 => '3 Heures de passage',
-                        4 => '4 Heures de passage',
-                    ])
-                    ->default(1)
-                    ->required()
-                    ->live()
-                    ->dehydrated(false)
-                    ->visible(function ($get) {
-                        $roomId = $get('room_id');
-                        if (! $roomId) return false;
-                        $room = \App\Models\Room::with('roomType')->find($roomId);
-                        $type = strtolower($room?->roomType?->name ?? '');
-                        return str_contains($type, 'passage') || str_contains($type, 'heure');
-                    })
-                    ->afterStateUpdated(function ($state, $get, $set) {
-                        if ($get('check_in')) {
-                            $set('check_out', $get('check_in'));
-                        }
-                        static::calculerTarifDynamique($get, $set);
-                    }),
+            Forms\Components\DatePicker::make('check_in')
+                ->label('Date d\'arrivée')
+                ->default(now())
+                ->required()
+                ->live()
+                ->afterStateUpdated(fn ($get, $set) => static::calculerTarifDynamique($get, $set)),
 
-                Forms\Components\DatePicker::make('check_out')
-                    ->label('Date de départ')
-                    ->default(now()->addDay())
-                    ->required()
-                    ->live()
-                    ->dehydrated()
-                    ->readOnly(function ($get) {
-                        $roomId = $get('room_id');
-                        if (! $roomId) return false;
-                        $room = \App\Models\Room::with('roomType')->find($roomId);
-                        $type = strtolower($room?->roomType?->name ?? '');
-                        return str_contains($type, 'passage') || str_contains($type, 'heure');
-                    })
-                    ->afterStateUpdated(fn ($get, $set) => static::calculerTarifDynamique($get, $set)),
+            Forms\Components\Select::make('nombre_heures')
+                ->label('Durée du passage (Heures)')
+                ->options([
+                    1 => '1 Heure de passage',
+                    2 => '2 Heures de passage',
+                    3 => '3 Heures de passage',
+                    4 => '4 Heures de passage',
+                ])
+                ->default(1)
+                ->required()
+                ->live()
+                ->dehydrated(false)
+                ->visible(function ($get) {
+                    $roomId = $get('room_id');
+                    if (! $roomId) return false;
+                    $room = \App\Models\Room::with('roomType')->find($roomId);
+                    $type = strtolower($room?->roomType?->name ?? '');
+                    return str_contains($type, 'passage') || str_contains($type, 'heure');
+                })
+                ->afterStateUpdated(function ($state, $get, $set) {
+                    if ($get('check_in')) {
+                        $set('check_out', $get('check_in'));
+                    }
+                    static::calculerTarifDynamique($get, $set);
+                }),
 
-                Forms\Components\TextInput::make('total_price')
-                    ->label('Prix Total')
-                    ->numeric()
-                    ->required()
-                    ->prefix('FCFA')
-                    ->dehydrated()
-                    ->readOnly(function ($get) {
-                        $roomId = $get('room_id');
-                        if (! $roomId) return false;
-                        $room = \App\Models\Room::with('roomType')->find($roomId);
-                        $type = strtolower($room?->roomType?->name ?? '');
-                        return str_contains($type, 'passage') || str_contains($type, 'heure');
-                    }),
-            ]);
-    }
+            Forms\Components\DatePicker::make('check_out')
+                ->label('Date de départ')
+                ->default(now()->addDay())
+                ->required()
+                ->live()
+                ->dehydrated()
+                ->readOnly(function ($get) {
+                    $roomId = $get('room_id');
+                    if (! $roomId) return false;
+                    $room = \App\Models\Room::with('roomType')->find($roomId);
+                    $type = strtolower($room?->roomType?->name ?? '');
+                    return str_contains($type, 'passage') || str_contains($type, 'heure');
+                })
+                ->afterStateUpdated(fn ($get, $set) => static::calculerTarifDynamique($get, $set)),
+
+            Forms\Components\TextInput::make('total_price')
+                ->label('Prix Total')
+                ->numeric()
+                ->required()
+                ->prefix('FCFA')
+                ->dehydrated()
+                ->readOnly(function ($get) {
+                    $roomId = $get('room_id');
+                    if (! $roomId) return false;
+                    $room = \App\Models\Room::with('roomType')->find($roomId);
+                    $type = strtolower($room?->roomType?->name ?? '');
+                    return str_contains($type, 'passage') || str_contains($type, 'heure');
+                }),
+
+            // AJOUT : Association de la carte magnétique d'accès (RFID)
+            Forms\Components\Select::make('key_card_id')
+                ->label('Attribuer une Carte Magnétique')
+                ->relationship('keyCard', 'uid')
+                ->placeholder('Sélectionnez ou scannez une carte RFID')
+                ->searchable()
+                ->preload()
+                // Charge uniquement les cartes au statut 'active'
+                ->options(function () {
+                    return \App\Models\KeyCard::where('status', 'active')
+                        ->get()
+                        ->mapWithKeys(function ($card) {
+                            $texteAffichage = $card->label ? "{$card->uid} ({$card->label})" : $card->uid;
+                            return [$card->id => $texteAffichage];
+                        });
+                })
+                ->helperText('Optionnel. Cliquez dans le champ puis passez la carte sur le lecteur USB pour la sélectionner automatiquement.')
+                ->columnSpanFull(),
+        ]);
+}
+
 
 /**
  * Alignement complet des calculs sur la structure de votre base de données
@@ -172,13 +198,21 @@ public static function form(Schema $schema): Schema
             }
         }
     }
-
-  public static function table(Table $table): Table
+public static function table(Table $table): Table
 {
     return $table
         ->columns([
             Tables\Columns\TextColumn::make('customer_name')->label('Client')->searchable(),
             Tables\Columns\TextColumn::make('room.number')->label('Chambre'),
+
+            // INCLUSION : Colonne visuelle pour la carte magnétique d'accès RFID
+            Tables\Columns\TextColumn::make('keyCard.uid')
+                ->label('Carte d\'accès')
+                ->placeholder('🚫 Aucune carte')
+                ->badge()
+                ->color(fn ($state) => $state ? 'info' : 'gray')
+                ->searchable(),
+
             Tables\Columns\TextColumn::make('check_in')->label('Arrivée')->date(),
             Tables\Columns\TextColumn::make('check_out')->label('Départ')->date(),
 
@@ -194,7 +228,7 @@ public static function form(Schema $schema): Schema
                 ->money(fn ($record) => $record->room?->roomType?->currency ?? 'XOF')
                 ->color('success'),
 
-            // FIX : Utilisation du chemin absolu \App\Models\Payment
+            // FIX RELLIKAT : Passage strict à 4 arguments pour la fonction number_format()
             Tables\Columns\TextColumn::make('balance_due')
                 ->label('Reste à Payer')
                 ->state(function ($record) {
@@ -204,7 +238,8 @@ public static function form(Schema $schema): Schema
                 ->money(fn ($record) => $record->room?->roomType?->currency ?? 'XOF')
                 ->badge()
                 ->color(fn ($state) => $state <= 0 ? 'success' : 'warning')
-                ->formatStateUsing(fn ($state) => $state <= 0 ? 'SOLDÉ' : number_format($state, 0, '.', ' ') . ' XOF'),
+                // CORRECTION ICI : Ajout du 4ème argument (décimales, séparateur décimal, séparateur milliers)
+                ->formatStateUsing(fn ($state) => $state <= 0 ? 'SOLDÉ' : number_format((float)$state, 0, '.', ' ') . ' XOF'),
         ])
         ->filters([])
         ->actions([
@@ -265,7 +300,6 @@ public static function form(Schema $schema): Schema
                         'amount' => $reliquat,
                     ]);
                 })
-                                // ÉCRITURE CORRIGÉE : On injecte \Filament\Actions\Action $action pour le rafraîchissement
                 ->action(function (array $data, $record, \Filament\Actions\Action $action): void {
                     // 1. Enregistrement du paiement en Base de Données
                     $payment = \App\Models\Payment::create([
@@ -273,7 +307,7 @@ public static function form(Schema $schema): Schema
                         'event_booking_id'  => $record->id,
                         'amount'            => $data['amount'],
                         'payment_method'    => $data['payment_method'],
-                        'status'            => 'validé / encaissé', // Ce statut doit être lu par le modèle
+                        'status'            => 'validé / encaissé',
                         'date_encaissement' => now(),
                     ]);
 
@@ -292,10 +326,8 @@ public static function form(Schema $schema): Schema
                         ->success()
                         ->send();
 
-                    // FIX ESSENTIEL : Indique à Filament que l'action est un succès et recharge le tableau en direct
                     $action->success();
                 })
-
                 ->requiresConfirmation()
                 ->modalHeading('Créer un paiement direct')
                 ->modalSubmitActionLabel('Valider l\'encaissement'),
@@ -303,6 +335,7 @@ public static function form(Schema $schema): Schema
         ->bulkActions([
             BulkActionGroup::make([
                 DeleteBulkAction::make(),
+                // L'Observer s'occupe automatiquement de libérer les cartes et salir les chambres
             ]),
         ]);
 }

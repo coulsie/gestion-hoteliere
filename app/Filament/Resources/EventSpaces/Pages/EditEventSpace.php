@@ -16,4 +16,13 @@ class EditEventSpace extends EditRecord
             DeleteAction::make(),
         ];
     }
+
+    /**
+     * REDIRECTION AUTOMATIQUE : Renvoie l'utilisateur vers le tableau
+     * de la liste des salles immédiatement après avoir cliqué sur Enregistrer.
+     */
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }

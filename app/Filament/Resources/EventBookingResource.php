@@ -28,96 +28,247 @@ class EventBookingResource extends Resource
 
 
     public static function form(Schema $schema): Schema
-    {
-        return $schema
-            ->components([
-                Forms\Components\TextInput::make('client_name')
-                    ->required()
-                    ->label('Nom du Client / Organisation'),
+{
+    return $schema
+        ->components([
+            Forms\Components\TextInput::make('client_name')
+                ->required()
+                ->label('Nom du Client / Organisation'),
 
-                Forms\Components\Select::make('event_space_id')
-                    ->relationship('eventSpace', 'name')
-                    ->live()
-                    ->required()
-                    ->label('Espace / Salle à allouer')
-                    ->afterStateUpdated(fn ($get, $set) => self::calculerPrixEvenement($get, $set)),
+            Forms\Components\Select::make('event_space_id')
+                ->relationship('eventSpace', 'name')
+                ->live()
+                ->required()
+                ->label('Espace / Salle à allouer')
+                ->afterStateUpdated(fn ($get, $set) => self::calculerPrixEvenement($get, $set)),
 
-                Forms\Components\DateTimePicker::make('start_time')
-                    ->live()
-                    ->required()
-                    ->label('Date & Heure de début')
-                    ->native(false)
-                    ->afterStateUpdated(fn ($get, $set) => self::calculerPrixEvenement($get, $set)),
+            Forms\Components\DateTimePicker::make('start_time')
+                ->live()
+                ->required()
+                ->label('Date & Heure de début')
+                ->native(false)
+                ->afterStateUpdated(fn ($get, $set) => self::calculerPrixEvenement($get, $set)),
 
-                Forms\Components\DateTimePicker::make('end_time')
-                    ->live()
-                    ->required()
-                    ->label('Date & Heure de fin')
-                    ->native(false)
-                    ->afterStateUpdated(fn ($get, $set) => self::calculerPrixEvenement($get, $set))
-                    // FIX INDISPENSABLE : Validation standard Laravel acceptée à 100% par Livewire et Filament v5
-                    ->rules([
-                        'after:start_time',
-                    ]),
+            Forms\Components\DateTimePicker::make('end_time')
+                ->live()
+                ->required()
+                ->label('Date & Heure de fin')
+                ->native(false)
+                ->afterStateUpdated(fn ($get, $set) => self::calculerPrixEvenement($get, $set))
+                ->rules([
+                    'after:start_time',
+                ]),
 
-                Forms\Components\TextInput::make('total_amount')
-                    ->numeric()
-                    ->prefix('FCFA')
-                    ->required()
-                    ->dehydrated()
-                    ->label('Montant de la Location'),
-            ]);
-    }
+            // FIX SYNC BDD : Remplacement de total_amount par total_price pour écrire au bon endroit
+             Forms\Components\TextInput::make('total_amount')
+                ->numeric()
+                ->prefix('FCFA')
+                ->required()
+                ->dehydrated()
+                ->label('Montant de la Location'),
+        ]);
+}
 
-   public static function calculerPrixEvenement($get, $set): void
+
+ public static function calculerPrixEvenement($get, $set): void
 {
     $start = $get('start_time');
     $end = $get('end_time');
     $spaceId = $get('event_space_id');
 
-    // On vérifie rigoureusement que les données ne sont ni nulles ni vides
     if (!empty($start) && !empty($end) && !empty($spaceId)) {
-        // Utilisation de Carbon::make() pour éviter le bug d'argument manquant
         $debut = \Illuminate\Support\Carbon::make($start);
         $fin = \Illuminate\Support\Carbon::make($end);
 
-        // Sécurité si les dates n'ont pas pu être lues par Carbon
         if ($debut && $fin) {
-            $heures = $debut->diffInHours($fin);
+            $espace = \App\Models\EventSpace::find($spaceId);
+            if (! $espace) return;
 
-            if ($heures > 0) {
-                $espace = \App\Models\EventSpace::find($spaceId);
-                $tarifHoraire = $espace?->hourly_rate ?? 0;
-                $set('total_amount', $heures * $tarifHoraire);
-            } else {
-                $set('total_amount', 0);
+            $heures = max(1, $debut->diffInHours($fin));
+            $jours = $debut->diffInDays($fin);
+            $prixCalcule = 0;
+
+            // MOTEUR DE FORFAITS INTELLIGENT :
+            // 1. Si la réservation dure 24h ou plus -> Forfait Journalier
+            if ($jours >= 1 || $heures >= 18) {
+                $nbJours = max(1, $jours);
+                $prixCalcule = $nbJours * ($espace->daily_rate ?? $espace->hourly_rate * 24 ?? 0);
             }
+            // 2. Si la réservation dure entre 4h et 6h -> Forfait Période (Demi-journée / Soirée)
+            elseif ($heures >= 4 && $heures <= 6) {
+                $prixCalcule = $espace->period_rate ?? ($espace->hourly_rate * $heures);
+            }
+            // 3. Sinon, tarification standard au prorata des heures réelles
+            else {
+                $prixCalcule = $heures * ($espace->hourly_rate ?? 0);
+            }
+
+            // FIX UNIQUE : On injecte dans total_price au lieu de total_amount
+            $set('total_price', $prixCalcule);
         }
     } else {
-        $set('total_amount', 0);
+        $set('total_amount', $prixCalcule);
     }
 }
 
 
-    public static function table(Table $table): Table
-    {
-        return $table
-            ->columns([
-                Tables\Columns\TextColumn::make('client_name')->label('Organisateur')->searchable(),
-                Tables\Columns\TextColumn::make('eventSpace.name')->label('Espace alloué'),
-                Tables\Columns\TextColumn::make('start_time')->label('Début')->dateTime('d/m/Y H:i'),
-                Tables\Columns\TextColumn::make('end_time')->label('Fin')->dateTime('d/m/Y H:i'),
-                Tables\Columns\TextColumn::make('total_amount')->label('Recette')->money('XOF'),
-            ])
-            ->actions([
-                EditAction::make(),
-            ])
-            ->bulkActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
-            ]);
-    }
+  public static function table(\Filament\Tables\Table $table): \Filament\Tables\Table
+{
+    return $table
+        ->columns([
+            \Filament\Tables\Columns\TextColumn::make('client_name')
+                ->label('Client / Organisation')
+                ->searchable(),
+
+            \Filament\Tables\Columns\TextColumn::make('eventSpace.name')
+                ->label('Salle louée'),
+
+            \Filament\Tables\Columns\TextColumn::make('event_date')
+                ->label('Date de l\'événement')
+                ->date('d/m/Y'),
+
+            \Filament\Tables\Columns\TextColumn::make('formule_location')
+                ->label('Formule')
+                ->badge()
+                ->color('info')
+                ->formatStateUsing(fn (string $state) => match($state) {
+                    'heure' => '⏳ À l\'heure',
+                    'periode' => '🌅 Période',
+                    'journee' => '📅 Journée',
+                    default => $state
+                }),
+
+                      // 1. LECTURE DE LA COLONNE CORRECTE TOTAL_AMOUNT
+            \Filament\Tables\Columns\TextColumn::make('total_amount')
+                ->label('Total Facturé')
+                ->state(fn ($record) => (float) ($record->total_amount ?? 0))
+                ->money('XOF')
+                ->sortable(),
+
+            // 2. CUMUL DES ACOMPTES ENCAISSÉS
+            \Filament\Tables\Columns\TextColumn::make('total_paid')
+                ->label('Déjà Payé')
+                ->state(fn ($record) => \App\Models\Payment::getSommePayeePourSalle($record->id))
+                ->money('XOF')
+                ->color('success'),
+
+            // 3. RESTE A PAYER BASÉ SUR TOTAL_AMOUNT
+            \Filament\Tables\Columns\TextColumn::make('balance_due')
+                ->label('Reste à Payer')
+                ->state(function ($record) {
+                    $dejaPaye = \App\Models\Payment::getSommePayeePourSalle($record->id);
+                    $total = (float) ($record->total_amount ?? 0);
+                    return max(0, $total - $dejaPaye);
+                })
+                ->money('XOF')
+                ->badge()
+                ->color(fn ($state) => $state <= 0 ? 'success' : 'warning')
+                ->formatStateUsing(fn ($state) => $state <= 0 ? 'SOLDÉ' : number_format((float)$state, 0, '.', ' ') . ' FCFA'),
+
+        ])
+        ->filters([])
+        ->actions([
+            \Filament\Actions\EditAction::make(),
+
+            // Bouton d'encaissement direct connecté aux tarifs flexibles de la salle
+            \Filament\Actions\Action::make('passer_au_paiement_salle')
+                ->label(function ($record) {
+                    $dejaPaye = \App\Models\Payment::getSommePayeePourSalle($record->id);
+                    $total = (float) ($record->total_price ?? 0);
+                    return ($total - $dejaPaye) <= 0 ? 'Soldé' : 'Encaisser Location';
+                })
+                ->icon('heroicon-o-banknotes')
+                ->color(function ($record) {
+                    $dejaPaye = \App\Models\Payment::getSommePayeePourSalle($record->id);
+                    $total = (float) ($record->total_price ?? 0);
+                    return ($total - $dejaPaye) <= 0 ? 'gray' : 'success';
+                })
+                ->disabled(function ($record) {
+                    $dejaPaye = \App\Models\Payment::getSommePayeePourSalle($record->id);
+                    $total = (float) ($record->total_price ?? 0);
+                    return ($total - $dejaPaye) <= 0;
+                })
+                ->form([
+                    \Filament\Forms\Components\TextInput::make('receipt_number')
+                        ->label('Numéro de Reçu')
+                        ->default('REC-SALLE-' . date('Ymd-His'))
+                        ->required()
+                        ->readOnly(),
+
+                    \Filament\Forms\Components\TextInput::make('amount_to_pay')
+                        ->label('Reste à recouvrer sur la salle')
+                        ->numeric()
+                        ->prefix('FCFA')
+                        ->readOnly(),
+
+                    \Filament\Forms\Components\TextInput::make('amount')
+                        ->label('Montant Versé (Acompte ou Solde)')
+                        ->numeric()
+                        ->prefix('FCFA')
+                        ->required()
+                        ->hint('Modifiable si le client paie un acompte partiel'),
+
+                    \Filament\Forms\Components\Select::make('payment_method')
+                        ->label('Mode de règlement')
+                        ->options([
+                            'cash' => 'Espèces / Cash',
+                            'card' => 'Carte Bancaire',
+                            'mobile_money' => 'Mobile Money',
+                            'bank_transfer' => 'Virement Bancaire',
+                        ])
+                        ->required(),
+                ])
+                ->mountUsing(function ($form, $record) {
+                    $dejaPaye = \App\Models\Payment::getSommePayeePourSalle($record->id);
+                    $total = (float) ($record->total_price ?? 0);
+                    $reliquat = max(0, $total - $dejaPaye);
+
+                    $form->fill([
+                        'receipt_number' => 'REC-SALLE-' . date('Ymd-His'),
+                        'amount_to_pay' => $reliquat,
+                        'amount' => $reliquat,
+                    ]);
+                })
+                ->action(function (array $data, $record, \Filament\Actions\Action $action): void {
+                    $payment = \App\Models\Payment::create([
+                        'receipt_number'    => $data['receipt_number'],
+                        'event_booking_id'  => $record->id,
+                        'amount'            => $data['amount'],
+                        'payment_method'    => $data['payment_method'],
+                        'payment_type'      => 'salle',
+                        'status'            => 'validé / encaissé',
+                        'date_encaissement' => now(),
+                    ]);
+
+                    $url = route('payments.receipt', ['payment' => $payment->id]);
+
+                    \Filament\Notifications\Notification::make()
+                        ->title('Paiement Salle Enregistré !')
+                        ->actions([
+                            \Filament\Actions\Action::make('imprimer')
+                                ->label('🖨️ Imprimer le reçu')
+                                ->color('success')
+                                ->url($url)
+                                ->openUrlInNewTab(),
+                        ])
+                        ->body("Le reçu d'un montant de " . number_format($data['amount'], 0, ',', ' ') . " FCFA a été créé avec succès.")
+                        ->success()
+                        ->send();
+
+                    $action->success();
+                })
+                ->requiresConfirmation()
+                ->modalHeading('Encaisser un règlement de salle')
+                ->modalSubmitActionLabel('Valider la recette'),
+        ])
+        ->bulkActions([
+            // ALIAS NETTOYÉ : Utilisation directe de l'import v4 unifié
+            BulkActionGroup::make([
+                DeleteBulkAction::make(),
+            ]),
+        ]);
+}
+
 
     public static function getRelations(): array
     {

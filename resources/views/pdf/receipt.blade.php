@@ -23,46 +23,41 @@
 <body>
 
 @php
-    // 1. Récupération sécurisée de la réservation liée
     $booking = $booking ?? $payment->eventBooking ?? null;
 
-    // 2. Récupération de l'historique réel des encaissements en BDD
-    $bookingId = $booking?->id ?? $payment->event_booking_id ?? 0;
-    $totalDejaPayeEnBdd = \App\Models\Payment::getSommePayeePourReservation($bookingId);
-
-    // 3. Détermination du VRAI coût global de la facture
-    // Si le prix de la réservation en BDD est erroné ou inférieur à ce qui a été payé,
-    // on s'aligne sur la réalité financière (45 000 FCFA)
-    $totalFactureBdd = $booking ? ($booking->total_price ?? $booking->prix_total ?? 0) : 0;
-    $totalTheorique = max($totalFactureBdd, $totalDejaPayeEnBdd, ($payment->amount ?? 0));
+    // Utilisation des vrais noms de colonnes validés
+    $totalChambre = $booking ? ($booking->total_price ?? 0) : 0;
+    $totalTheorique = $booking ? $booking->grand_total : ($payment->amount ?? 0);
 
     $prixUnitaire = $booking?->room?->roomType?->base_price ?? 0;
     $typeChambre = strtolower($booking?->room?->roomType?->name ?? '');
 
-    // 4. Déduction de la durée d'occupation à l'écran
-    if ($booking && (str_contains($typeChambre, 'passage') || str_contains($typeChambre, 'heure'))) {
-        $unites = $prixUnitaire > 0 ? round($totalTheorique / $prixUnitaire) : 1;
-        $texteDuree = $unites . ' heure(s)';
-        $labelUnite = 'Tarif Horaire';
+    if ($booking) {
+        $debut = \Illuminate\Support\Carbon::parse($booking->check_in);
+        $fin = \Illuminate\Support\Carbon::parse($booking->check_out);
+
+        if (str_contains($typeChambre, 'passage') || str_contains($typeChambre, 'heure')) {
+            $unites = $prixUnitaire > 0 ? round($totalChambre / $prixUnitaire) : 1;
+            $texteDuree = $unites . ' heure(s)';
+            $labelUnite = 'Tarif Horaire';
+        } else {
+            $unites = max(1, $debut->diffInDays($fin));
+            $texteDuree = $unites . ' nuit(s)';
+            $labelUnite = 'Tarif par Nuitée';
+        }
     } else {
-        $unites = $booking ? max(1, \Illuminate\Support\Carbon::parse($booking->start_date)->diffInDays(\Illuminate\Support\Carbon::parse($booking->end_date))) : 1;
-        $texteDuree = $unites . ' nuit(s)';
-        $labelUnite = 'Tarif par Nuitée';
+        $unites = 1; $texteDuree = '1 séjour(s)'; $labelUnite = 'Tarif';
     }
 
-    // 5. Ajustement dynamique du prix unitaire affiché si le total a été forcé
-    if ($unites > 0 && ($prixUnitaire * $unites) !== $totalTheorique) {
-        $prixUnitaire = $totalTheorique / $unites;
-    }
-
-    // 6. Calcul exact du solde final restant dû
+    $bookingId = $booking?->id ?? $payment->event_booking_id ?? 0;
+    $totalDejaPayeEnBdd = \App\Models\Payment::getSommePayeePourReservation($bookingId);
     $resteAPayer = max(0, $totalTheorique - $totalDejaPayeEnBdd);
 
-    // 7. Traduction du mode de règlement et date
     $methodes = ['cash' => 'Espèces / Cash', 'card' => 'Carte Bancaire', 'mobile_money' => 'Mobile Money', 'bank_transfer' => 'Virement Bancaire'];
     $modeReglement = $methodes[$payment->payment_method] ?? ucfirst($payment->payment_method);
     $datePaiement = \Illuminate\Support\Carbon::parse($payment->date_encaissement ?? $payment->created_at ?? now());
 @endphp
+
 
 
 <div class="receipt-box">
@@ -111,15 +106,28 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- C'EST ICI QU'IL FAUT REMPLACER LE CODE -->
+                <!-- Prestation 1 : L'hébergement de base (Chambre) -->
                 <tr>
-                    <td>Hébergement : Occupation de la Chambre N° {{ $booking->room?->number ?? 'N/A' }}</td>
+                    <td>Hébergement : Occupation de la Chambre N° {{ $booking?->room?->number ?? 'N/A' }}</td>
                     <td style="text-align: right;">{{ number_format($prixUnitaire, 0, ',', ' ') }} FCFA</td>
                     <td style="text-align: right;">{{ $texteDuree }}</td>
-                    <td style="text-align: right; font-weight: bold;">{{ number_format($totalTheorique, 0, ',', ' ') }} FCFA</td>
+                    <td style="text-align: right; font-weight: bold;">{{ number_format($booking?->prix_total ?? 0, 0, ',', ' ') }} FCFA</td>
                 </tr>
-                <!-- FIN DU BLOC À REMPLACER -->
+
+                <!-- Prestations suivantes : Les consommations de restauration s'ajoutent toutes seules -->
+                @if($booking && $booking->cateringItems->count() > 0)
+                    @foreach($booking->cateringItems as $item)
+                        <tr>
+                            <td style="color: #555;">🍽️ Restauration : {{ $item->name ?? 'Consommation Restaurant' }} ({{ $item->created_at->format('d/m/Y') }})</td>
+                            <!-- Remplacez $item->price par votre colonne de montant si différente -->
+                            <td style="text-align: right; color: #555;">{{ number_format($item->price ?? 0, 0, ',', ' ') }} FCFA</td>
+                            <td style="text-align: right; color: #555;">1</td>
+                            <td style="text-align: right; color: #555; font-weight: bold;">{{ number_format($item->price ?? 0, 0, ',', ' ') }} FCFA</td>
+                        </tr>
+                    @endforeach
+                @endif
             </tbody>
+
         </table>
 
 

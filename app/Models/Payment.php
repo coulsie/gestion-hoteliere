@@ -56,4 +56,20 @@ class Payment extends Model
         ->sum('amount');
 }
 
+    /**
+     * Calcule le cumul déjà payé pour une location de salle
+     */
+    public static function getSommePayeePourSalle(int|string|null $bookingId): float
+    {
+        if (! $bookingId) {
+            return 0.0;
+        }
+
+        return (float) static::where('event_booking_id', $bookingId)
+            ->where('payment_type', 'salle')
+            ->whereIn('status', ['completed', 'validé / encaissé'])
+            ->sum('amount');
+    }
+
+
 }

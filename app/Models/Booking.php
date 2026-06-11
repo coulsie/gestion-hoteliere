@@ -26,19 +26,11 @@ class Booking extends Model
         return $this->belongsTo(Room::class);
     }
 
-    /**
-     * Relation : Une réservation peut être associée à une carte d'accès magnétique
-     */
-
-    public function keyCard(): \Illuminate\Database\Eloquent\Relations\BelongsTo
-    {
-        return $this->belongsTo(KeyCard::class);
-    }
 
 /**
  * Calcule le montant total théorique de la chambre pour ce séjour
  */
-    
+
 /**
  * Calcule le montant total théorique du séjour (Prend en compte les jours ou les heures)
  */
@@ -62,6 +54,64 @@ public function getMontantTotalChambreAttribute(): float
     $jours = max(1, $debut->diffInDays($fin));
     return (float) ($jours * $prixBase);
 }
+
+    /**
+     * Relation : Une réservation peut être associée à une carte d'accès magnétique
+     */
+    public function keyCard(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(KeyCard::class, 'key_card_id');
+    }
+
+
+protected static function booted(): void
+{
+    static::deleting(function (Booking $booking) {
+        // 1. Libération automatique de la carte magnétique
+        if ($booking->key_card_id) {
+            $booking->key_card_id = null;
+            $booking->save();
+        }
+
+        // 2. AUTOMATISATION : La chambre passe à l'état 'sale' dès que le client libère la chambre
+        if ($booking->room_id) {
+            \App\Models\Room::where('id', $booking->room_id)->update([
+                'housekeeping_status' => 'sale'
+            ]);
+        }
+    });
+}
+
+    /**
+     * Relation : Une réservation peut avoir plusieurs commandes de restauration
+     */
+    
+
+    /**
+     * Relation : Une réservation peut avoir plusieurs commandes de restauration
+     */
+    public function cateringItems(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(CateringItem::class, 'event_booking_id');
+    }
+
+    /**
+     * Calcule le montant total cumulé (Chambre + Extras)
+     */
+    public function getGrandTotalAttribute(): float
+    {
+        // 1. On récupère le prix de base de la chambre stocké dans votre colonne native total_price
+        $coutChambre = (float) ($this->total_price ?? 0);
+
+        // 2. Récupération des extras. Nous utilisons une sécurité (prix OU montant OU 0)
+        // pour s'adapter à la colonne exacte de votre table catering_items
+        $coutRestauration = (float) $this->cateringItems->sum(function ($item) {
+            return $item->prix ?? $item->amount ?? $item->price ?? 0;
+        });
+
+        // 3. Retourne la somme globale
+        return $coutChambre + $coutRestauration;
+    }
 
 
 }
