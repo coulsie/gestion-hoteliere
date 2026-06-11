@@ -34,8 +34,7 @@ class BookingResource extends Resource
     protected static ?string $modelLabel = 'Réservation';
 
 
-
-           public static function form(Schema $schema): Schema
+public static function form(Schema $schema): Schema
     {
         return $schema
             ->columns(2)
@@ -63,7 +62,6 @@ class BookingResource extends Resource
                     ->live()
                     ->afterStateUpdated(fn ($get, $set) => static::calculerTarifDynamique($get, $set)),
 
-                // Durée en heures pour le type passage (Masqué si classique)
                 Forms\Components\Select::make('nombre_heures')
                     ->label('Durée du passage (Heures)')
                     ->options([
@@ -75,7 +73,7 @@ class BookingResource extends Resource
                     ->default(1)
                     ->required()
                     ->live()
-                    ->dehydrated(false) // Champ virtuel, ne s'envoie pas en BDD
+                    ->dehydrated(false)
                     ->visible(function ($get) {
                         $roomId = $get('room_id');
                         if (! $roomId) return false;
@@ -90,13 +88,12 @@ class BookingResource extends Resource
                         static::calculerTarifDynamique($get, $set);
                     }),
 
-                // TOUJOURS VISIBLE mais verrouillé si c'est un passage (Règle l'erreur 1364)
                 Forms\Components\DatePicker::make('check_out')
                     ->label('Date de départ')
                     ->default(now()->addDay())
                     ->required()
                     ->live()
-                    ->dehydrated() // Force l'envoi en BDD
+                    ->dehydrated()
                     ->readOnly(function ($get) {
                         $roomId = $get('room_id');
                         if (! $roomId) return false;
@@ -106,13 +103,12 @@ class BookingResource extends Resource
                     })
                     ->afterStateUpdated(fn ($get, $set) => static::calculerTarifDynamique($get, $set)),
 
-                // TOUJOURS VISIBLE mais verrouillé si c'est un passage (Règle l'erreur 1364)
                 Forms\Components\TextInput::make('total_price')
                     ->label('Prix Total')
                     ->numeric()
                     ->required()
                     ->prefix('FCFA')
-                    ->dehydrated() // Force l'envoi en BDD
+                    ->dehydrated()
                     ->readOnly(function ($get) {
                         $roomId = $get('room_id');
                         if (! $roomId) return false;
@@ -123,41 +119,35 @@ class BookingResource extends Resource
             ]);
     }
 
-
 /**
  * Alignement complet des calculs sur la structure de votre base de données
  */
-public static function calculerTarifDynamique($get, $set): void
-{
-    $roomId = $get('room_id');
-    $start = $get('check_in');
 
-    if (!empty($roomId) && !empty($start)) {
-        $room = Room::with('roomType')->find($roomId);
-        $typeChambre = strtolower($room?->roomType?->name ?? '');
-        $prixUnitaire = $room?->roomType?->base_price ?? 0;
+ public static function calculerTarifDynamique($get, $set): void
+    {
+        $roomId = $get('room_id');
+        $start = $get('check_in');
 
-        // Formule de Passage à l'heure
-        if (str_contains($typeChambre, 'passage') || str_contains($typeChambre, 'heure')) {
-            $heures = (int) ($get('nombre_heures') ?? 1);
+        if (!empty($roomId) && !empty($start)) {
+            $room = Room::with('roomType')->find($roomId);
+            $typeChambre = strtolower($room?->roomType?->name ?? '');
+            $prixUnitaire = $room?->roomType?->base_price ?? 0;
 
-            // On enregistre le même jour dans check_out car le type BDD est "date" sans heure
-            $set('check_out', $start);
-            // Calcul du prix total basé sur le nombre d'heures
-            $set('total_price', $heures * $prixUnitaire);
-        }
-        // Formule Hôtelière classique (Nuitée)
-        else {
-            $end = $get('check_out');
-            if ($end) {
-                $debut = Carbon::make($start);
-                $fin = Carbon::make($end);
-                $jours = max(1, $debut->diffInDays($fin));
-                $set('total_price', $jours * $prixUnitaire);
+            if (str_contains($typeChambre, 'passage') || str_contains($typeChambre, 'heure')) {
+                $heures = (int) ($get('nombre_heures') ?? 1);
+                $set('check_out', $start);
+                $set('total_price', $heures * $prixUnitaire);
+            } else {
+                $end = $get('check_out');
+                if ($end) {
+                    $debut = Carbon::make($start);
+                    $fin = Carbon::make($end);
+                    $jours = max(1, $debut->diffInDays($fin));
+                    $set('total_price', $jours * $prixUnitaire);
+                }
             }
         }
     }
-}
 
     public static function calculerPrixTotal($get, $set): void
     {
@@ -183,31 +173,140 @@ public static function calculerTarifDynamique($get, $set): void
         }
     }
 
-    public static function table(Table $table): Table
-    {
-        return $table
-            ->columns([
-                Tables\Columns\TextColumn::make('customer_name')->label('Client')->searchable(),
-                Tables\Columns\TextColumn::make('room.number')->label('Chambre'),
-                Tables\Columns\TextColumn::make('check_in')->label('Arrivée')->date(),
-                Tables\Columns\TextColumn::make('check_out')->label('Départ')->date(),
-                                Tables\Columns\TextColumn::make('total_price')
-                    ->label('Total')
-                    ->sortable()
-                    // Correction définitive utilisant la méthode officielle money()
-                    ->money(fn ($record) => $record->room?->roomType?->currency ?? 'XOF'),
+  public static function table(Table $table): Table
+{
+    return $table
+        ->columns([
+            Tables\Columns\TextColumn::make('customer_name')->label('Client')->searchable(),
+            Tables\Columns\TextColumn::make('room.number')->label('Chambre'),
+            Tables\Columns\TextColumn::make('check_in')->label('Arrivée')->date(),
+            Tables\Columns\TextColumn::make('check_out')->label('Départ')->date(),
 
-            ])
-            ->filters([])
-            ->actions([
-                EditAction::make(),
-            ])
-            ->bulkActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
-            ]);
-    }
+            Tables\Columns\TextColumn::make('total_price')
+                ->label('Total')
+                ->sortable()
+                ->money(fn ($record) => $record->room?->roomType?->currency ?? 'XOF'),
+
+            // FIX : Utilisation du chemin absolu \App\Models\Payment
+            Tables\Columns\TextColumn::make('total_paid')
+                ->label('Déjà Payé')
+                ->state(fn ($record) => \App\Models\Payment::getSommePayeePourReservation($record->id))
+                ->money(fn ($record) => $record->room?->roomType?->currency ?? 'XOF')
+                ->color('success'),
+
+            // FIX : Utilisation du chemin absolu \App\Models\Payment
+            Tables\Columns\TextColumn::make('balance_due')
+                ->label('Reste à Payer')
+                ->state(function ($record) {
+                    $dejaPaye = \App\Models\Payment::getSommePayeePourReservation($record->id);
+                    return max(0, ($record->total_price ?? 0) - $dejaPaye);
+                })
+                ->money(fn ($record) => $record->room?->roomType?->currency ?? 'XOF')
+                ->badge()
+                ->color(fn ($state) => $state <= 0 ? 'success' : 'warning')
+                ->formatStateUsing(fn ($state) => $state <= 0 ? 'SOLDÉ' : number_format($state, 0, '.', ' ') . ' XOF'),
+        ])
+        ->filters([])
+        ->actions([
+            EditAction::make(),
+
+            // Bouton d'encaissement direct et intelligent
+            \Filament\Actions\Action::make('passer_au_paiement')
+                ->label(function ($record) {
+                    $dejaPaye = \App\Models\Payment::getSommePayeePourReservation($record->id);
+                    return (($record->total_price ?? 0) - $dejaPaye) <= 0 ? 'Soldé' : 'Passer au paiement';
+                })
+                ->icon('heroicon-o-banknotes')
+                ->color(function ($record) {
+                    $dejaPaye = \App\Models\Payment::getSommePayeePourReservation($record->id);
+                    return (($record->total_price ?? 0) - $dejaPaye) <= 0 ? 'gray' : 'success';
+                })
+                ->disabled(function ($record) {
+                    $dejaPaye = \App\Models\Payment::getSommePayeePourReservation($record->id);
+                    return (($record->total_price ?? 0) - $dejaPaye) <= 0;
+                })
+                ->form([
+                    TextInput::make('receipt_number')
+                        ->label('Numéro de Reçu')
+                        ->default('REC-' . date('Ymd-His'))
+                        ->required()
+                        ->readOnly(),
+
+                    TextInput::make('amount_to_pay')
+                        ->label('Reste à payer')
+                        ->numeric()
+                        ->prefix('FCFA')
+                        ->readOnly(),
+
+                    TextInput::make('amount')
+                        ->label('Montant à Encaisser')
+                        ->numeric()
+                        ->prefix('FCFA')
+                        ->required()
+                        ->hint('Modifiable si paiement partiel'),
+
+                    Select::make('payment_method')
+                        ->label('Mode de règlement')
+                        ->options([
+                            'cash' => 'Espèces / Cash',
+                            'card' => 'Carte Bancaire',
+                            'mobile_money' => 'Mobile Money',
+                            'bank_transfer' => 'Virement Bancaire',
+                        ])
+                        ->required(),
+                ])
+                ->mountUsing(function ($form, $record) {
+                    $dejaPaye = \App\Models\Payment::getSommePayeePourReservation($record->id);
+                    $reliquat = max(0, ($record->total_price ?? 0) - $dejaPaye);
+
+                    $form->fill([
+                        'receipt_number' => 'REC-' . date('Ymd-His'),
+                        'amount_to_pay' => $reliquat,
+                        'amount' => $reliquat,
+                    ]);
+                })
+                                // ÉCRITURE CORRIGÉE : On injecte \Filament\Actions\Action $action pour le rafraîchissement
+                ->action(function (array $data, $record, \Filament\Actions\Action $action): void {
+                    // 1. Enregistrement du paiement en Base de Données
+                    $payment = \App\Models\Payment::create([
+                        'receipt_number'    => $data['receipt_number'],
+                        'event_booking_id'  => $record->id,
+                        'amount'            => $data['amount'],
+                        'payment_method'    => $data['payment_method'],
+                        'status'            => 'validé / encaissé', // Ce statut doit être lu par le modèle
+                        'date_encaissement' => now(),
+                    ]);
+
+                    $url = route('payments.receipt', ['payment' => $payment->id]);
+
+                    \Filament\Notifications\Notification::make()
+                        ->title('Paiement enregistré !')
+                        ->actions([
+                            \Filament\Actions\Action::make('imprimer')
+                                ->label('🖨️ Imprimer le reçu')
+                                ->color('success')
+                                ->url($url)
+                                ->openUrlInNewTab(),
+                        ])
+                        ->body("Le reçu {$data['receipt_number']} d'un montant de " . number_format($data['amount'], 0, ',', ' ') . " FCFA a été créé avec succès.")
+                        ->success()
+                        ->send();
+
+                    // FIX ESSENTIEL : Indique à Filament que l'action est un succès et recharge le tableau en direct
+                    $action->success();
+                })
+
+                ->requiresConfirmation()
+                ->modalHeading('Créer un paiement direct')
+                ->modalSubmitActionLabel('Valider l\'encaissement'),
+        ])
+        ->bulkActions([
+            BulkActionGroup::make([
+                DeleteBulkAction::make(),
+            ]),
+        ]);
+}
+
 
     public static function getRelations(): array
     {

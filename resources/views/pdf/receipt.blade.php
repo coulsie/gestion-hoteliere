@@ -23,40 +23,47 @@
 <body>
 
 @php
-    // 1. Analyse des dates et détection du type de chambre
-    $debut = \Illuminate\Support\Carbon::parse($booking->start_date);
-    $fin = \Illuminate\Support\Carbon::parse($booking->end_date);
-    $typeChambre = strtolower($booking->room?->roomType?->name ?? '');
-    $prixUnitaire = $booking->room?->roomType?->base_price ?? 0;
+    // 1. Récupération sécurisée de la réservation liée
+    $booking = $booking ?? $payment->eventBooking ?? null;
 
-    // 2. Gestion de la tarification au passage (à l'heure) ou classique (à la nuit)
-    if (str_contains($typeChambre, 'passage') || str_contains($typeChambre, 'heure')) {
-        $unites = max(1, $debut->diffInHours($fin));
+    // 2. Récupération de l'historique réel des encaissements en BDD
+    $bookingId = $booking?->id ?? $payment->event_booking_id ?? 0;
+    $totalDejaPayeEnBdd = \App\Models\Payment::getSommePayeePourReservation($bookingId);
+
+    // 3. Détermination du VRAI coût global de la facture
+    // Si le prix de la réservation en BDD est erroné ou inférieur à ce qui a été payé,
+    // on s'aligne sur la réalité financière (45 000 FCFA)
+    $totalFactureBdd = $booking ? ($booking->total_price ?? $booking->prix_total ?? 0) : 0;
+    $totalTheorique = max($totalFactureBdd, $totalDejaPayeEnBdd, ($payment->amount ?? 0));
+
+    $prixUnitaire = $booking?->room?->roomType?->base_price ?? 0;
+    $typeChambre = strtolower($booking?->room?->roomType?->name ?? '');
+
+    // 4. Déduction de la durée d'occupation à l'écran
+    if ($booking && (str_contains($typeChambre, 'passage') || str_contains($typeChambre, 'heure'))) {
+        $unites = $prixUnitaire > 0 ? round($totalTheorique / $prixUnitaire) : 1;
         $texteDuree = $unites . ' heure(s)';
         $labelUnite = 'Tarif Horaire';
     } else {
-        $unites = max(1, $debut->diffInDays($fin));
+        $unites = $booking ? max(1, \Illuminate\Support\Carbon::parse($booking->start_date)->diffInDays(\Illuminate\Support\Carbon::parse($booking->end_date))) : 1;
         $texteDuree = $unites . ' nuit(s)';
         $labelUnite = 'Tarif par Nuitée';
     }
 
-    $totalTheorique = $unites * $prixUnitaire;
+    // 5. Ajustement dynamique du prix unitaire affiché si le total a été forcé
+    if ($unites > 0 && ($prixUnitaire * $unites) !== $totalTheorique) {
+        $prixUnitaire = $totalTheorique / $unites;
+    }
 
-    // 3. Récupération du cumul historique de la base de données
-    $totalDejaPayeEnBdd = \App\Models\Payment::getSommePayeePourReservation($booking->id);
-
-    // 4. Calcul du solde final restant dû
+    // 6. Calcul exact du solde final restant dû
     $resteAPayer = max(0, $totalTheorique - $totalDejaPayeEnBdd);
 
-    // Dictionnaire pour traduire proprement le mode de règlement à l'écran
-    $methodes = [
-        'cash' => 'Espèces / Cash',
-        'card' => 'Carte Bancaire',
-        'mobile_money' => 'Mobile Money',
-        'bank_transfer' => 'Virement Bancaire'
-    ];
+    // 7. Traduction du mode de règlement et date
+    $methodes = ['cash' => 'Espèces / Cash', 'card' => 'Carte Bancaire', 'mobile_money' => 'Mobile Money', 'bank_transfer' => 'Virement Bancaire'];
     $modeReglement = $methodes[$payment->payment_method] ?? ucfirst($payment->payment_method);
+    $datePaiement = \Illuminate\Support\Carbon::parse($payment->date_encaissement ?? $payment->created_at ?? now());
 @endphp
+
 
 <div class="receipt-box">
     <!-- Boutons utilitaires -->

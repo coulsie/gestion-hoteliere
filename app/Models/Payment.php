@@ -44,10 +44,16 @@ class Payment extends Model
     /**
      * Calcule le total déjà payé par le client pour une réservation donnée
      */
-    public static function getSommePayeePourReservation($bookingId): float
-    {
-        return (float) static::where('event_booking_id', $bookingId)
-            ->where('status', 'completed')
-            ->sum('amount');
+   public static function getSommePayeePourReservation(int|string|null $bookingId): float
+{
+    if (! $bookingId) {
+        return 0.0;
     }
+
+    return (float) static::where('event_booking_id', $bookingId)
+        // FIX : On demande à SQL de faire la somme des paiements 'completed' ET 'validé / encaissé'
+        ->whereIn('status', ['completed', 'validé / encaissé'])
+        ->sum('amount');
+}
+
 }
