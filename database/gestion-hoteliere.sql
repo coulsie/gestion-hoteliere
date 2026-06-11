@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1:3307
--- Généré le : jeu. 11 juin 2026 à 07:58
+-- Généré le : jeu. 11 juin 2026 à 12:21
 -- Version du serveur : 11.4.9-MariaDB
 -- Version de PHP : 8.3.28
 
@@ -64,17 +64,16 @@ CREATE TABLE IF NOT EXISTS `bookings` (
   PRIMARY KEY (`id`),
   KEY `bookings_room_id_foreign` (`room_id`),
   KEY `bookings_key_card_id_foreign` (`key_card_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `bookings`
 --
 
 INSERT INTO `bookings` (`id`, `room_id`, `key_card_id`, `key_card_assigned_at`, `key_card_expires_at`, `customer_name`, `check_in`, `check_out`, `total_price`, `created_at`, `updated_at`) VALUES
-(1, 3, NULL, NULL, NULL, 'KONE Lanzéni', '2026-06-08', '2026-06-11', 165.00, '2026-06-08 13:31:10', '2026-06-08 13:31:10'),
-(2, 6, NULL, NULL, NULL, 'KOUAME Seraphin', '2026-06-08', '2026-06-10', 120.00, '2026-06-08 13:31:35', '2026-06-08 13:31:35'),
 (3, 13, NULL, NULL, NULL, 'KOFFI LEON', '2026-06-09', '2026-06-09', 15000.00, '2026-06-09 17:06:06', '2026-06-09 17:06:06'),
-(4, 2, NULL, NULL, NULL, 'ouattara amara', '2026-06-09', '2026-06-12', 45000.00, '2026-06-09 17:06:38', '2026-06-09 17:06:38');
+(4, 2, NULL, NULL, NULL, 'ouattara amara', '2026-06-09', '2026-06-12', 45000.00, '2026-06-09 17:06:38', '2026-06-09 17:06:38'),
+(5, 15, NULL, NULL, NULL, 'OUATT1', '2026-06-11', '2026-06-11', 15000.00, '2026-06-11 08:11:59', '2026-06-11 08:11:59');
 
 -- --------------------------------------------------------
 
@@ -96,8 +95,8 @@ CREATE TABLE IF NOT EXISTS `cache` (
 --
 
 INSERT INTO `cache` (`key`, `value`, `expiration`) VALUES
-('laravel-cache-livewire-rate-limiter:16d36dff9abd246c67dfac3e63b993a169af77e6:timer', 'i:1781020278;', 1781020278),
-('laravel-cache-livewire-rate-limiter:16d36dff9abd246c67dfac3e63b993a169af77e6', 'i:1;', 1781020278);
+('laravel-cache-livewire-rate-limiter:16d36dff9abd246c67dfac3e63b993a169af77e6:timer', 'i:1781164934;', 1781164934),
+('laravel-cache-livewire-rate-limiter:16d36dff9abd246c67dfac3e63b993a169af77e6', 'i:1;', 1781164934);
 
 -- --------------------------------------------------------
 
@@ -337,7 +336,7 @@ CREATE TABLE IF NOT EXISTS `payments` (
   UNIQUE KEY `payments_receipt_number_unique` (`receipt_number`),
   KEY `payments_event_booking_id_foreign` (`event_booking_id`),
   KEY `payments_user_id_foreign` (`user_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `payments`
@@ -346,7 +345,8 @@ CREATE TABLE IF NOT EXISTS `payments` (
 INSERT INTO `payments` (`id`, `event_booking_id`, `receipt_number`, `amount`, `payment_method`, `status`, `paid_at`, `user_id`, `notes`, `created_at`, `updated_at`) VALUES
 (6, 2, 'REC-20260609-160942', 8000.00, 'cash', 'completed', '2026-06-09 16:09:42', NULL, NULL, '2026-06-09 16:10:08', '2026-06-09 16:10:08'),
 (5, 1, 'REC-20260609-160618', 5000.00, 'cash', 'completed', '2026-06-09 16:06:18', NULL, NULL, '2026-06-09 16:06:47', '2026-06-09 16:06:47'),
-(4, 1, 'REC-20260609-133520', 10000.00, 'cash', 'completed', '2026-06-09 13:35:20', NULL, NULL, '2026-06-09 13:35:52', '2026-06-09 13:35:52');
+(8, 5, 'REC-20260611-091852', 15000.00, 'cash', 'validé / encaissé', '2026-06-11 09:19:20', NULL, NULL, '2026-06-11 09:19:20', '2026-06-11 09:19:20'),
+(20, 4, 'REC-20260611-120650', 35000.00, 'cash', 'validé / encaissé', '2026-06-11 12:07:00', NULL, NULL, '2026-06-11 12:07:00', '2026-06-11 12:07:00');
 
 -- --------------------------------------------------------
 
@@ -374,10 +374,10 @@ CREATE TABLE IF NOT EXISTS `rooms` (
 INSERT INTO `rooms` (`id`, `room_type_id`, `number`, `status`, `created_at`, `updated_at`) VALUES
 (1, 4, '21', 'disponible', '2026-06-08 13:21:15', '2026-06-08 13:21:15'),
 (2, 4, '22', 'occupee', '2026-06-08 13:21:29', '2026-06-09 17:06:38'),
-(3, 4, '23', 'disponible', '2026-06-08 13:21:41', '2026-06-08 13:21:41'),
+(3, 4, '23', 'menage', '2026-06-08 13:21:41', '2026-06-11 09:18:20'),
 (4, 4, '24', 'disponible', '2026-06-08 13:21:51', '2026-06-08 13:21:51'),
 (5, 1, '25', 'disponible', '2026-06-08 13:21:59', '2026-06-08 13:21:59'),
-(6, 3, '26', 'disponible', '2026-06-08 13:22:24', '2026-06-08 13:22:24'),
+(6, 3, '26', 'menage', '2026-06-08 13:22:24', '2026-06-11 09:18:20'),
 (7, 2, '27', 'disponible', '2026-06-08 13:22:32', '2026-06-08 13:22:32'),
 (8, 2, '28', 'disponible', '2026-06-08 13:22:40', '2026-06-08 13:22:40'),
 (9, 2, '29', 'disponible', '2026-06-08 13:22:48', '2026-06-08 13:22:48'),
@@ -386,7 +386,7 @@ INSERT INTO `rooms` (`id`, `room_type_id`, `number`, `status`, `created_at`, `up
 (12, 5, '32', 'disponible', '2026-06-09 16:38:59', '2026-06-09 16:38:59'),
 (13, 5, '33', 'occupee', '2026-06-09 16:39:07', '2026-06-09 17:06:06'),
 (14, 5, '34', 'disponible', '2026-06-09 16:39:17', '2026-06-09 16:39:17'),
-(15, 5, '35', 'disponible', '2026-06-09 16:39:26', '2026-06-09 16:39:26');
+(15, 5, '35', 'occupee', '2026-06-09 16:39:26', '2026-06-11 08:11:59');
 
 -- --------------------------------------------------------
 
