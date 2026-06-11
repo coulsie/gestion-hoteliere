@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1:3307
--- Généré le : jeu. 11 juin 2026 à 12:21
+-- Généré le : jeu. 11 juin 2026 à 15:36
 -- Version du serveur : 11.4.9-MariaDB
 -- Version de PHP : 8.3.28
 
@@ -127,8 +127,21 @@ CREATE TABLE IF NOT EXISTS `catering_items` (
   `unit_price` decimal(8,2) NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `event_booking_id` bigint(20) UNSIGNED DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `catering_items_event_booking_id_foreign` (`event_booking_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Déchargement des données de la table `catering_items`
+--
+
+INSERT INTO `catering_items` (`id`, `name`, `category`, `unit_price`, `created_at`, `updated_at`, `event_booking_id`) VALUES
+(1, 'Sauce Graine au Riz', 'plat', 2500.00, '2026-06-11 14:29:49', '2026-06-11 14:29:49', NULL),
+(2, 'Sauce Arrachide au Riz', 'plat', 2500.00, '2026-06-11 14:30:14', '2026-06-11 14:30:14', NULL),
+(3, '1 Personne', 'forfait_buffet', 3500.00, '2026-06-11 14:30:46', '2026-06-11 14:30:46', NULL),
+(4, 'Poisson Braisé Attieké', 'plat', 7500.00, '2026-06-11 14:31:29', '2026-06-11 14:31:56', NULL),
+(5, 'Vin Valpierre', 'boisson', 3500.00, '2026-06-11 14:32:22', '2026-06-11 14:32:22', NULL);
 
 -- --------------------------------------------------------
 
@@ -140,6 +153,9 @@ DROP TABLE IF EXISTS `event_bookings`;
 CREATE TABLE IF NOT EXISTS `event_bookings` (
   `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
   `event_space_id` bigint(20) UNSIGNED NOT NULL,
+  `formule_location` varchar(191) NOT NULL DEFAULT 'journee',
+  `choix_periode` varchar(191) DEFAULT NULL,
+  `nombre_heures` int(11) DEFAULT NULL,
   `client_name` varchar(191) NOT NULL,
   `start_time` datetime NOT NULL,
   `end_time` datetime NOT NULL,
@@ -149,7 +165,14 @@ CREATE TABLE IF NOT EXISTS `event_bookings` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `event_bookings_event_space_id_foreign` (`event_space_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Déchargement des données de la table `event_bookings`
+--
+
+INSERT INTO `event_bookings` (`id`, `event_space_id`, `formule_location`, `choix_periode`, `nombre_heures`, `client_name`, `start_time`, `end_time`, `status`, `total_amount`, `created_at`, `updated_at`) VALUES
+(1, 1, 'journee', NULL, NULL, 'SIFCA', '2026-06-16 10:00:00', '2026-06-16 16:00:00', 'confirme', 9000000.00, '2026-06-11 14:58:35', '2026-06-11 14:58:35');
 
 -- --------------------------------------------------------
 
@@ -167,7 +190,16 @@ CREATE TABLE IF NOT EXISTS `event_spaces` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Déchargement des données de la table `event_spaces`
+--
+
+INSERT INTO `event_spaces` (`id`, `name`, `type`, `capacity`, `hourly_rate`, `created_at`, `updated_at`) VALUES
+(1, 'Salle Katanna', 'conference', 250, 1500000.00, '2026-06-11 14:47:42', '2026-06-11 14:47:54'),
+(2, 'Salle Diogaha', 'conference', 5500, 5000000.00, '2026-06-11 14:49:10', '2026-06-11 14:49:15'),
+(3, 'Salle Sabaga', 'esplanade', 9000, 5000000.00, '2026-06-11 14:53:28', '2026-06-11 14:53:28');
 
 -- --------------------------------------------------------
 
@@ -276,7 +308,7 @@ CREATE TABLE IF NOT EXISTS `migrations` (
   `migration` varchar(191) NOT NULL,
   `batch` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `migrations`
@@ -297,7 +329,10 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (13, '2026_06_08_153121_create_payments_table', 10),
 (15, '2026_06_09_114356_create_key_cards_table', 12),
 (16, '2026_06_09_114546_add_key_card_fields_to_bookings_table', 13),
-(17, '2026_06_09_124320_add_currency_to_room_types_table', 14);
+(17, '2026_06_09_124320_add_currency_to_room_types_table', 14),
+(18, '2026_06_11_133540_add_housekeeping_status_to_rooms_table', 15),
+(19, '2026_06_11_134344_add_booking_id_to_catering_orders_table', 16),
+(20, '2026_06_11_150319_add_booking_options_to_event_bookings_table', 17);
 
 -- --------------------------------------------------------
 
@@ -323,6 +358,7 @@ DROP TABLE IF EXISTS `payments`;
 CREATE TABLE IF NOT EXISTS `payments` (
   `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
   `event_booking_id` bigint(20) UNSIGNED NOT NULL,
+  `payment_type` varchar(191) NOT NULL DEFAULT 'chambre',
   `receipt_number` varchar(191) NOT NULL,
   `amount` decimal(10,2) NOT NULL,
   `payment_method` varchar(191) NOT NULL,
@@ -342,11 +378,11 @@ CREATE TABLE IF NOT EXISTS `payments` (
 -- Déchargement des données de la table `payments`
 --
 
-INSERT INTO `payments` (`id`, `event_booking_id`, `receipt_number`, `amount`, `payment_method`, `status`, `paid_at`, `user_id`, `notes`, `created_at`, `updated_at`) VALUES
-(6, 2, 'REC-20260609-160942', 8000.00, 'cash', 'completed', '2026-06-09 16:09:42', NULL, NULL, '2026-06-09 16:10:08', '2026-06-09 16:10:08'),
-(5, 1, 'REC-20260609-160618', 5000.00, 'cash', 'completed', '2026-06-09 16:06:18', NULL, NULL, '2026-06-09 16:06:47', '2026-06-09 16:06:47'),
-(8, 5, 'REC-20260611-091852', 15000.00, 'cash', 'validé / encaissé', '2026-06-11 09:19:20', NULL, NULL, '2026-06-11 09:19:20', '2026-06-11 09:19:20'),
-(20, 4, 'REC-20260611-120650', 35000.00, 'cash', 'validé / encaissé', '2026-06-11 12:07:00', NULL, NULL, '2026-06-11 12:07:00', '2026-06-11 12:07:00');
+INSERT INTO `payments` (`id`, `event_booking_id`, `payment_type`, `receipt_number`, `amount`, `payment_method`, `status`, `paid_at`, `user_id`, `notes`, `created_at`, `updated_at`) VALUES
+(6, 2, 'chambre', 'REC-20260609-160942', 8000.00, 'cash', 'completed', '2026-06-09 16:09:42', NULL, NULL, '2026-06-09 16:10:08', '2026-06-09 16:10:08'),
+(5, 1, 'chambre', 'REC-20260609-160618', 5000.00, 'cash', 'completed', '2026-06-09 16:06:18', NULL, NULL, '2026-06-09 16:06:47', '2026-06-09 16:06:47'),
+(8, 5, 'chambre', 'REC-20260611-091852', 15000.00, 'cash', 'validé / encaissé', '2026-06-11 09:19:20', NULL, NULL, '2026-06-11 09:19:20', '2026-06-11 09:19:20'),
+(20, 4, 'chambre', 'REC-20260611-120650', 35000.00, 'cash', 'validé / encaissé', '2026-06-11 12:07:00', NULL, NULL, '2026-06-11 12:07:00', '2026-06-11 12:07:00');
 
 -- --------------------------------------------------------
 
@@ -362,6 +398,7 @@ CREATE TABLE IF NOT EXISTS `rooms` (
   `status` varchar(191) NOT NULL DEFAULT 'disponible',
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
+  `housekeeping_status` enum('propre','sale','en_cours','maintenance') NOT NULL DEFAULT 'propre',
   PRIMARY KEY (`id`),
   UNIQUE KEY `rooms_number_unique` (`number`),
   KEY `rooms_room_type_id_foreign` (`room_type_id`)
@@ -371,22 +408,22 @@ CREATE TABLE IF NOT EXISTS `rooms` (
 -- Déchargement des données de la table `rooms`
 --
 
-INSERT INTO `rooms` (`id`, `room_type_id`, `number`, `status`, `created_at`, `updated_at`) VALUES
-(1, 4, '21', 'disponible', '2026-06-08 13:21:15', '2026-06-08 13:21:15'),
-(2, 4, '22', 'occupee', '2026-06-08 13:21:29', '2026-06-09 17:06:38'),
-(3, 4, '23', 'menage', '2026-06-08 13:21:41', '2026-06-11 09:18:20'),
-(4, 4, '24', 'disponible', '2026-06-08 13:21:51', '2026-06-08 13:21:51'),
-(5, 1, '25', 'disponible', '2026-06-08 13:21:59', '2026-06-08 13:21:59'),
-(6, 3, '26', 'menage', '2026-06-08 13:22:24', '2026-06-11 09:18:20'),
-(7, 2, '27', 'disponible', '2026-06-08 13:22:32', '2026-06-08 13:22:32'),
-(8, 2, '28', 'disponible', '2026-06-08 13:22:40', '2026-06-08 13:22:40'),
-(9, 2, '29', 'disponible', '2026-06-08 13:22:48', '2026-06-08 13:22:48'),
-(10, 2, '30', 'disponible', '2026-06-08 13:23:00', '2026-06-08 13:23:00'),
-(11, 1, '31', 'disponible', '2026-06-08 13:23:09', '2026-06-08 13:23:09'),
-(12, 5, '32', 'disponible', '2026-06-09 16:38:59', '2026-06-09 16:38:59'),
-(13, 5, '33', 'occupee', '2026-06-09 16:39:07', '2026-06-09 17:06:06'),
-(14, 5, '34', 'disponible', '2026-06-09 16:39:17', '2026-06-09 16:39:17'),
-(15, 5, '35', 'occupee', '2026-06-09 16:39:26', '2026-06-11 08:11:59');
+INSERT INTO `rooms` (`id`, `room_type_id`, `number`, `status`, `created_at`, `updated_at`, `housekeeping_status`) VALUES
+(1, 4, '21', 'disponible', '2026-06-08 13:21:15', '2026-06-08 13:21:15', 'propre'),
+(2, 4, '22', 'occupee', '2026-06-08 13:21:29', '2026-06-09 17:06:38', 'propre'),
+(3, 4, '23', 'menage', '2026-06-08 13:21:41', '2026-06-11 09:18:20', 'propre'),
+(4, 4, '24', 'disponible', '2026-06-08 13:21:51', '2026-06-08 13:21:51', 'propre'),
+(5, 1, '25', 'disponible', '2026-06-08 13:21:59', '2026-06-08 13:21:59', 'propre'),
+(6, 3, '26', 'menage', '2026-06-08 13:22:24', '2026-06-11 09:18:20', 'propre'),
+(7, 2, '27', 'disponible', '2026-06-08 13:22:32', '2026-06-08 13:22:32', 'propre'),
+(8, 2, '28', 'disponible', '2026-06-08 13:22:40', '2026-06-08 13:22:40', 'propre'),
+(9, 2, '29', 'disponible', '2026-06-08 13:22:48', '2026-06-08 13:22:48', 'propre'),
+(10, 2, '30', 'disponible', '2026-06-08 13:23:00', '2026-06-08 13:23:00', 'propre'),
+(11, 1, '31', 'disponible', '2026-06-08 13:23:09', '2026-06-08 13:23:09', 'propre'),
+(12, 5, '32', 'disponible', '2026-06-09 16:38:59', '2026-06-09 16:38:59', 'propre'),
+(13, 5, '33', 'occupee', '2026-06-09 16:39:07', '2026-06-09 17:06:06', 'propre'),
+(14, 5, '34', 'disponible', '2026-06-09 16:39:17', '2026-06-09 16:39:17', 'propre'),
+(15, 5, '35', 'occupee', '2026-06-09 16:39:26', '2026-06-11 08:11:59', 'propre');
 
 -- --------------------------------------------------------
 
