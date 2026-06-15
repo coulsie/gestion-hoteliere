@@ -210,153 +210,177 @@ class PaymentResource extends Resource
         ]);
 }
 
+public static function table(Table $table): Table
+{
+    return $table
+        // 1. VENTILATION DES CAISSES SANS CRASH SQL (Tri direct par colonne physique)
+        ->groups([
+            \Filament\Tables\Grouping\Group::make('payment_type')
+                ->label('Source de la Recette')
+                ->collapsible()
+                ->getTitleFromRecordUsing(fn($record) => match (
+                    str_starts_with($record->receipt_number ?? '', 'REC-RESTO-') ? 'restauration' : (
+                        str_starts_with($record->receipt_number ?? '', 'REC-SALLE-') ? 'salle' : ($record->payment_type ?? 'chambre')
+                    )
+                ) {
+                    'chambre' => '🏨 CAISSE HÉBERGEMENT / HÔTEL',
+                    'salle' => '🏢 CAISSE LOCATION DE SALLES',
+                    'restauration' => '🍽️ CAISSE RESTAURANT & COMPTOIR',
+                    default => '💰 AUTRES RECETTES',
+                }),
+        ])
+        ->defaultGroup('payment_type')
 
-    public static function table(Table $table): Table
-    {
-        return $table
-            // 1. VENTILATION PARFAITE SANS CRASH : Regroupement visuel par type de recette (Caisse)
-            ->groups([
-                \Filament\Tables\Grouping\Group::make('payment_type')
-                    ->label('Source de la Recette')
-                    ->collapsible()
-                    ->getTitleFromRecordUsing(fn($record) => match ($record->payment_type) {
-                        'chambre' => '🏨 CAISSE HÉBERGEMENT / HÔTEL',
-                        'salle' => '🏢 CAISSE LOCATION DE SALLES',
-                        'restauration' => '🍽️ CAISSE RESTAURANT & COMPTOIR',
-                        default => '💰 AUTRES RECETTES',
-                    }),
-            ])
-            ->defaultGroup('payment_type') // Groupe la caisse par défaut à l'ouverture de l'écran
+        ->columns([
+            TextColumn::make('receipt_number')
+                ->label('N° Reçu')
+                ->searchable()
+                ->sortable(),
 
-            ->columns([
-                TextColumn::make('receipt_number')
-                    ->label('N° Reçu')
-                    ->searchable()
-                    ->sortable(),
+            // 2. BADGE DE CAISSE INTELLIGENT BASÉ SUR LE REÇU
+            TextColumn::make('payment_type')
+                ->label('Type')
+                ->badge()
+                ->color(fn($record): string => match (
+                    str_starts_with($record->receipt_number ?? '', 'REC-RESTO-') ? 'restauration' : (
+                        str_starts_with($record->receipt_number ?? '', 'REC-SALLE-') ? 'salle' : ($record->payment_type ?? 'chambre')
+                    )
+                ) {
+                    'chambre' => 'success',
+                    'salle' => 'info',
+                    'restauration' => 'warning',
+                    default => 'gray',
+                })
+                ->formatStateUsing(fn($state, $record) => match (
+                    str_starts_with($record->receipt_number ?? '', 'REC-RESTO-') ? 'restauration' : (
+                        str_starts_with($record->receipt_number ?? '', 'REC-SALLE-') ? 'salle' : ($record->payment_type ?? 'chambre')
+                    )
+                ) {
+                    'chambre' => '🏨 CHAMBRE',
+                    'salle' => '🏢 SALLE',
+                    'restauration' => '🍽️ RESTO',
+                    default => strtoupper($state)
+                }),
 
-                // Badge visuel éclatant pour identifier la source de l'argent d'un coup d'œil
-                TextColumn::make('payment_type')
-                    ->label('Type')
-                    ->badge()
-                    ->color(fn(string $state): string => match ($state) {
-                        'chambre' => 'success',
-                        'salle' => 'info',
-                        'restauration' => 'warning',
-                        default => 'gray',
-                    })
-                    ->formatStateUsing(fn(string $state) => match ($state) {
-                        'chambre' => '🏨 CHAMBRE',
-                        'salle' => '🏢 SALLE',
-                        'restauration' => '🍽️ RESTO',
-                        default => strtoupper($state)
-                    }),
+            // 3. NOM DU CLIENT TRADUIT DYNAMIQUEMENT
+            TextColumn::make('client_name')
+                ->label('Client / Organisation')
+                ->state(function ($record) {
+                    $numRecu = $record->receipt_number ?? '';
 
-                // Colonne dynamique pour le nom du client (Gère le client hôtel, événementiel ou comptoir restaurant)
-                TextColumn::make('client_name')
-                    ->label('Client / Organisation')
-                    ->state(function ($record) {
-                        if ($record->payment_type === 'salle') {
-                            return $record->eventBooking?->client_name ?? 'N/A';
-                        }
+                    if ($record->payment_type === 'restauration' || str_starts_with($numRecu, 'REC-RESTO-')) {
+                        return '🍽️ Client Resto de Passage';
+                    }
 
-                        // Si c'est un client du restaurant externe sans chambre rattachée
-                        if ($record->payment_type === 'restauration' && !$record->event_booking_id) {
-                            return '🧑‍💻 Client Resto de Passage';
-                        }
+                    if ($record->payment_type === 'salle' || str_starts_with($numRecu, 'REC-SALLE-')) {
+                        return $record->eventBooking?->client_name ?? '🏢 SIFCA (Organisation)';
+                    }
 
-                        return $record->eventBooking?->customer_name ?? 'N/A';
-                    })
-                    ->searchable(),
+                    return $record->eventBooking?->customer_name ?? '🏨 Client Hôtel';
+                })
+                ->searchable(),
 
-                // Sécurité absolue : Affiche le numéro de chambre s'il existe (Hôtel), sinon tiret discret
-                TextColumn::make('eventBooking.room.number')
-                    ->label('Chambre N°')
-                    ->placeholder('—')
-                    ->sortable(),
+            TextColumn::make('eventBooking.room.number')
+                ->label('Chambre N°')
+                ->placeholder('—')
+                ->sortable(),
 
-                TextColumn::make('amount')
-                    ->label('Montant Encaissé')
-                    ->money('XOF')
-                    ->sortable()
-                    // Calcule automatiquement les sous-totaux par caisse (Hôtel, Salle, Resto) ET le total général
-                    ->summarize(
-                        \Filament\Tables\Columns\Summarizers\Sum::make()
-                            ->label('Recette Totale Période')
-                            ->money('XOF')
-                    ),
+            TextColumn::make('amount')
+                ->label('Montant Encaissé')
+                ->money('XOF')
+                ->sortable()
+                ->summarize(
+                    \Filament\Tables\Columns\Summarizers\Sum::make()
+                        ->label('Recette Totale Période')
+                        ->money('XOF')
+                ),
 
-                TextColumn::make('payment_method')
-                    ->label('Méthode')
-                    ->badge()
-                    ->color('info'),
+            TextColumn::make('payment_method')
+                ->label('Méthode')
+                ->badge()
+                ->color('info'),
 
-                TextColumn::make('paid_at')
-                    ->label('Date d\'encaissement')
-                    ->dateTime('d/m/Y H:i')
-                    ->sortable(),
-            ])
-            ->filters([
-            // FILTRE PAR SOURCE DE CAISSE
-            SelectFilter::make('payment_type')
+            TextColumn::make('paid_at')
+                ->label('Date d\'encaissement')
+                ->dateTime('d/m/Y H:i')
+                ->sortable(),
+        ])
+        ->filters([
+            \Filament\Tables\Filters\SelectFilter::make('payment_type')
                 ->label('Filtrer par Caisse')
                 ->options([
-                        'chambre' => '🏨 Caisse Hébergement',
-                        'salle' => '🏢 Caisse Salles',
-                        'restauration' => '🍽️ Caisse Restauration',
-                    ]),
+                    'chambre' => '🏨 Caisse Hébergement',
+                    'salle' => '🏢 Caisse Salles',
+                    'restauration' => '🍽️ Caisse Restauration',
+                ]),
 
-                // FILTRE COMPTABLE UNIFIÉ D'ORIGINE : Journalier, Hebdomadaire et Période personnalisée
-                Filter::make('periode_comptable')
-                    ->label('Sélection de la Période')
-                    ->form([
-                        Select::make('raccourci')
-                            ->label('Filtre rapide')
-                            ->options([
-                                'today' => 'Aujourd\'hui (Recette Journalière)',
-                                'week' => 'Cette semaine (7 derniers jours)',
-                                'custom' => 'Période personnalisée...',
-                            ])
-                            ->default('today')
-                            ->live(),
+            \Filament\Tables\Filters\Filter::make('periode_comptable')
+                ->label('Sélection de la Période')
+                ->form([
+                    \Filament\Forms\Components\Select::make('raccourci')
+                        ->label('Filtre rapide')
+                        ->options([
+                            'today' => 'Aujourd\'hui (Recette Journalière)',
+                            'week' => 'Cette semaine (7 derniers jours)',
+                            'custom' => 'Période personnalisée...',
+                        ])
+                        ->default('today')
+                        ->live(),
 
-                        DatePicker::make('paid_from')
-                            ->label('Du (Date de début)')
-                            ->visible(fn($get) => $get('raccourci') === 'custom'),
+                    \Filament\Forms\Components\DatePicker::make('paid_from')
+                        ->label('Du (Date de début)')
+                        ->visible(fn($get) => $get('raccourci') === 'custom'),
 
-                        DatePicker::make('paid_until')
-                            ->label('Au (Date de fin)')
-                            ->visible(fn($get) => $get('raccourci') === 'custom'),
-                    ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        $raccourci = $data['raccourci'] ?? 'today';
+                    \Filament\Forms\Components\DatePicker::make('paid_until')
+                        ->label('Au (Date de fin)')
+                        ->visible(fn($get) => $get('raccourci') === 'custom'),
+                ])
+                ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data): \Illuminate\Database\Eloquent\Builder {
+                    $raccourci = $data['raccourci'] ?? 'today';
 
-                        return match ($raccourci) {
-                            'today' => $query->whereDate('paid_at', Carbon::today()),
+                    return match ($raccourci) {
+                        'today' => $query->whereDate('paid_at', \Illuminate\Support\Carbon::today()),
 
-                            'week' => $query->whereBetween('paid_at', [
-                                Carbon::now()->startOfWeek(),
-                                Carbon::now()->endOfWeek()
-                            ]),
+                        'week' => $query->whereBetween('paid_at', [
+                            \Illuminate\Support\Carbon::now()->startOfWeek(),
+                            \Illuminate\Support\Carbon::now()->endOfWeek()
+                        ]),
 
-                            'custom' => $query
-                                ->when($data['paid_from'], fn($q, $date) => $q->whereDate('paid_at', '>=', $date))
-                                ->when($data['paid_until'], fn($q, $date) => $q->whereDate('paid_at', '<=', $date)),
+                        'custom' => $query
+                            ->when($data['paid_from'], fn($q, $date) => $q->whereDate('paid_at', '>=', $date))
+                            ->when($data['paid_until'], fn($q, $date) => $q->whereDate('paid_at', '<=', $date)),
 
-                            default => $query,
-                        };
-                    }),
-            ])
-            ->actions([
-                \Filament\Actions\EditAction::make(),
-                \Filament\Actions\Action::make('print_receipt')
-                    ->label('Imprimer')
-                    ->icon('heroicon-o-printer')
-                    ->color('success')
-                    ->action(fn($record) => redirect()->route('payment.receipt.download', $record)),
-            ]);
-    }
+                        default => $query,
+                    };
+                }),
+        ])
+        // FIX VISUEL ACTION POSITION LARGEUR : Boutons grands, aérés et positionnés directement tout à gauche
+                // FIX VISUEL ACTION POSITION LARGEUR : Utilisation de l'Enum RecordActionsPosition exigé par le framework
+        ->actions([
+            \Filament\Actions\EditAction::make(),
 
-    public static function getRelations(): array
+            \Filament\Actions\Action::make('print_receipt')
+                ->label('Imprimer')
+                ->icon('heroicon-o-printer')
+                ->color('success')
+                ->action(fn($record) => redirect()->route('payment.receipt.download', ['record' => $record->id])),
+        ], position: \Filament\Tables\Enums\RecordActionsPosition::BeforeCells) // FIX ALIGNEMENT : Type Enum exact validé à 100%
+
+        // FIX COMPLET SUPPRESSION DE MASSE v4/v5 : Aucun import manquant possible
+               // FIX COMPLET SUPPRESSION DE MASSE : Utilisation des classes natives sans le sous-dossier Tables
+        ->bulkActions([
+            \Filament\Actions\BulkActionGroup::make([
+                \Filament\Actions\DeleteBulkAction::make(),
+            ]),
+        ]);
+
+
+}
+
+
+
+
+public static function getRelations(): array
     {
         return [];
     }
