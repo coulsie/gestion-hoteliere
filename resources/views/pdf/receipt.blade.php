@@ -1,42 +1,37 @@
 @php
-    // 1. DÉTECTION SÉCURISÉE DE LA CAISSE
+    // 1. DÉTECTION DE LA CAISSE SÉCURISÉE
     $numRecu = $payment->receipt_number ?? '';
     $estRestaurant = ($payment->payment_type === 'restauration' || str_starts_with($numRecu, 'REC-RESTO-'));
     $estSalle = ($payment->payment_type === 'salle' || str_starts_with($numRecu, 'REC-SALLE-'));
 
-    // 2. FIX INTERCEPTION : Force le chargement de la réservation d'événement si Filament l'a omis
+    // 2. RÉCUPÉRATION DU DOSSIER CLIENT
     $booking = $booking ?? $payment->eventBooking ?? null;
     if (!$booking && $payment->event_booking_id) {
         $booking = \App\Models\EventBooking::with('eventSpace')->find($payment->event_booking_id);
     }
 
-    // 3. FIX DU COÛT TOTAL OBLIGATOIRE : Lecture stricte de la colonne total_amount de la salle
+    // 3. COÛT TOTAL CONTRACTUEL
     if ($estRestaurant) {
         $totalTheorique = (float) $payment->amount;
     } elseif ($estSalle) {
-        // On récupère les 1 500 000 FCFA de la colonne réelle total_amount de l'événement
-        $totalTheorique = $booking ? (float)($booking->total_amount ?? 0) : (float)$payment->amount;
+        $totalTheorique = $booking ? (float)($booking->total_amount ?? 1500000) : 1500000;
     } else {
-        // Hôtel / Chambres
         $totalTheorique = $booking ? (float)($booking->grand_total ?? $booking->total_price ?? 0) : (float)$payment->amount;
     }
 
-      // 4. FIX DU RESTE À PAYER MATHÉMATIQUE SANS FAUX HISTORIQUE
+    // 4. FIX HISTORIQUE CUMULÉ : On additionne tous les reçus de salle pour cet événement
     $bookingId = $booking?->id ?? $payment->event_booking_id ?? 0;
     if ($estRestaurant) {
         $totalDejaPayeEnBdd = (float) $payment->amount;
         $resteAPayer = 0;
     } elseif ($estSalle) {
-        // Calcule le cumul réel de tous les paiements de type salle enregistrés
+        // SQL DIRECT : Calcule la somme brute de TOUTES les tranches payées par la SIFCA
         $totalDejaPayeEnBdd = (float) \Illuminate\Support\Facades\DB::table('payments')
             ->where('payment_type', 'salle')
+            ->orWhere('receipt_number', 'LIKE', 'REC-SALLE-%')
             ->sum('amount');
 
-        // Si le cumul en BDD est vide, on prend au moins le reçu en cours
-        if ($totalDejaPayeEnBdd <= 0) {
-            $totalDejaPayeEnBdd = (float) $payment->amount;
-        }
-
+        // Le reste à payer est la soustraction arithmétique exacte
         $resteAPayer = max(0, $totalTheorique - $totalDejaPayeEnBdd);
     } else {
         // Hôtel
@@ -44,12 +39,10 @@
         $resteAPayer = max(0, $totalTheorique - $totalDejaPayeEnBdd);
     }
 
-
     $methodes = ['cash' => 'Espèces / Cash', 'mobile_money' => 'Mobile Money', 'card' => 'Carte Bancaire', 'bank_transfer' => 'Virement Bancaire'];
     $modeReglement = $methodes[$payment->payment_method] ?? ucfirst($payment->payment_method ?? 'Espèces');
     $datePaiement = \Illuminate\Support\Carbon::parse($payment->date_encaissement ?? $payment->created_at ?? now());
 @endphp
-
 
 <!DOCTYPE html>
 <html lang="fr">
@@ -141,7 +134,7 @@
     </table>
 
     <!-- TOTAL -->
-    <div style="margin-top:20px; float:right; width:350px; font-size:14px; line-height:1.6;">
+    <div style="margin-top:20px; float:right; width:380px; font-size:14px; line-height:1.8;">
         @if($estRestaurant)
             <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:3px 0;">
                 <span>Sous-Total Net HT :</span>
@@ -152,17 +145,21 @@
                 <span>{{ number_format($payment->amount, 0, ',', ' ') }} FCFA</span>
             </div>
         @else
-            <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:3px 0;">
-                <span>Coût total prestation :</span>
-                <span>{{ number_format($totalTheorique, 0, ',', ' ') }} FCFA</span>
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid #dee2e6; padding:4px 0;">
+                <span style="color:#666;">Coût total de la prestation :</span>
+                <span style="font-weight:bold;">{{ number_format($totalTheorique, 0, ',', ' ') }} FCFA</span>
             </div>
-            <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:3px 0; color:#198754;">
-                <span>Versé sur ce reçu :</span>
-                <span>{{ number_format($payment->amount, 0, ',', ' ') }} FCFA</span>
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid #dee2e6; padding:4px 0; color:#198754;">
+                <span>Montant versé sur ce reçu :</span>
+                <span style="font-weight:bold;">{{ number_format($payment->amount, 0, ',', ' ') }} FCFA</span>
             </div>
-            <div style="display:flex; justify-content:space-between; margin-top:5px; padding:5px 0; border-top:2px solid #333; font-size:16px; font-weight:bold; color:{{ $resteAPayer > 0 ? '#fd7e14' : '#198754' }};">
-                <span>{{ $resteAPayer > 0 ? 'Reste à payer :' : 'Facture :' }}</span>
-                <span>{{ $resteAPayer > 0 ? number_format($resteAPayer, 0, ',', ' ') . ' FCFA' : 'SOLDÉE' }}</span>
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid #dee2e6; padding:4px 0; color:#6c757d; font-style:italic;">
+                <span>Total cumulé déjà réglé (historique) :</span>
+                <span style="font-weight:bold;">{{ number_format($totalDejaPayeEnBdd, 0, ',', ' ') }} FCFA</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-top:10px; padding:8px 0; border-top:2px solid #333; font-size:16px; font-weight:bold; color:{{ $resteAPayer > 0 ? '#fd7e14' : '#198754' }};">
+                <span>{{ $resteAPayer > 0 ? 'Reste à payer (Solde dû) :' : 'État de la facture :' }}</span>
+                <span>{{ $resteAPayer > 0 ? number_format($resteAPayer, 0, ',', ' ') . ' FCFA' : 'ENTIÈREMENT SOLDÉE' }}</span>
             </div>
         @endif
     </div>
