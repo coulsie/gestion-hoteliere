@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.2.3
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1:3307
--- Généré le : lun. 15 juin 2026 à 08:52
--- Version du serveur : 11.5.2-MariaDB
--- Version de PHP : 8.3.14
+-- Généré le : lun. 15 juin 2026 à 14:45
+-- Version du serveur : 11.4.9-MariaDB
+-- Version de PHP : 8.3.28
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS `bookings` (
   PRIMARY KEY (`id`),
   KEY `bookings_room_id_foreign` (`room_id`),
   KEY `bookings_key_card_id_foreign` (`key_card_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `bookings`
@@ -73,7 +73,8 @@ CREATE TABLE IF NOT EXISTS `bookings` (
 INSERT INTO `bookings` (`id`, `room_id`, `key_card_id`, `key_card_assigned_at`, `key_card_expires_at`, `customer_name`, `check_in`, `check_out`, `total_price`, `created_at`, `updated_at`) VALUES
 (3, 13, NULL, NULL, NULL, 'KOFFI LEON', '2026-06-09', '2026-06-09', 15000.00, '2026-06-09 17:06:06', '2026-06-09 17:06:06'),
 (4, 2, NULL, NULL, NULL, 'ouattara amara', '2026-06-09', '2026-06-12', 45000.00, '2026-06-09 17:06:38', '2026-06-09 17:06:38'),
-(5, 15, NULL, NULL, NULL, 'OUATT1', '2026-06-11', '2026-06-11', 15000.00, '2026-06-11 08:11:59', '2026-06-11 08:11:59');
+(5, 15, NULL, NULL, NULL, 'OUATT1', '2026-06-11', '2026-06-11', 15000.00, '2026-06-11 08:11:59', '2026-06-11 08:11:59'),
+(6, 15, NULL, NULL, NULL, 'KOUAME Seraphin', '2026-06-15', '2026-06-15', 20000.00, '2026-06-15 10:53:32', '2026-06-15 10:53:32');
 
 -- --------------------------------------------------------
 
@@ -89,14 +90,6 @@ CREATE TABLE IF NOT EXISTS `cache` (
   PRIMARY KEY (`key`),
   KEY `cache_expiration_index` (`expiration`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Déchargement des données de la table `cache`
---
-
-INSERT INTO `cache` (`key`, `value`, `expiration`) VALUES
-('laravel-cache-livewire-rate-limiter:16d36dff9abd246c67dfac3e63b993a169af77e6:timer', 'i:1781467892;', 1781467892),
-('laravel-cache-livewire-rate-limiter:16d36dff9abd246c67dfac3e63b993a169af77e6', 'i:2;', 1781467892);
 
 -- --------------------------------------------------------
 
@@ -162,7 +155,7 @@ CREATE TABLE IF NOT EXISTS `catering_orders` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `catering_orders_order_number_unique` (`order_number`),
   KEY `catering_orders_booking_id_foreign` (`booking_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `catering_orders`
@@ -172,7 +165,16 @@ INSERT INTO `catering_orders` (`id`, `order_number`, `booking_id`, `client_name`
 (1, 'CMD-20260614-2025-15', NULL, 'Client Comptoir', 5000.00, 'paye', '2026-06-14 20:25:38', '2026-06-14 20:25:54'),
 (2, 'CMD-20260614-2026-84', NULL, 'Client Comptoir', 8500.00, 'paye', '2026-06-14 20:26:59', '2026-06-14 20:43:51'),
 (3, 'CMD-20260614-2030-59', NULL, 'Client Comptoir', 12500.00, 'paye', '2026-06-14 20:30:20', '2026-06-14 20:41:21'),
-(4, 'CMD-20260614-2041-78', NULL, 'Client Comptoir', 0.00, 'en_attente', '2026-06-14 20:41:03', '2026-06-14 20:41:03');
+(4, 'CMD-20260614-2041-78', NULL, 'Client Comptoir', 0.00, 'paye', '2026-06-14 20:41:03', '2026-06-15 10:03:32'),
+(5, 'CMD-20260615-1003-19', NULL, 'Client Comptoir', 7500.00, 'paye', '2026-06-15 10:03:19', '2026-06-15 10:39:33'),
+(6, 'CMD-20260615-1011-87', NULL, 'Client Comptoir', 75000.00, 'paye', '2026-06-15 10:11:44', '2026-06-15 10:12:57'),
+(7, 'CMD-20260615-1012-23', NULL, 'Client Comptoir', 12500.00, 'paye', '2026-06-15 10:12:23', '2026-06-15 10:12:36'),
+(8, 'CMD-20260615-1020-34', NULL, 'Client Comptoir', 15500.00, 'paye', '2026-06-15 10:20:41', '2026-06-15 10:39:57'),
+(9, 'CMD-20260615-1024-61', NULL, 'Client Comptoir', 13000.00, 'paye', '2026-06-15 10:24:06', '2026-06-15 10:24:17'),
+(10, 'CMD-20260615-1031-25', NULL, 'Client Comptoir', 83000.00, 'paye', '2026-06-15 10:31:28', '2026-06-15 10:31:36'),
+(11, 'CMD-20260615-1040-37', NULL, 'Client Comptoir', 27500.00, 'paye', '2026-06-15 10:40:42', '2026-06-15 10:40:53'),
+(12, 'CMD-20260615-1046-13', NULL, 'Client Comptoir', 40000.00, 'paye', '2026-06-15 10:46:55', '2026-06-15 10:47:03'),
+(13, 'CMD-20260615-1414-44', NULL, 'Client Comptoir', 14500.00, 'paye', '2026-06-15 14:14:43', '2026-06-15 14:14:53');
 
 -- --------------------------------------------------------
 
@@ -192,7 +194,7 @@ CREATE TABLE IF NOT EXISTS `catering_order_items` (
   PRIMARY KEY (`id`),
   KEY `catering_order_items_catering_order_id_foreign` (`catering_order_id`),
   KEY `catering_order_items_catering_item_id_foreign` (`catering_item_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `catering_order_items`
@@ -211,7 +213,25 @@ INSERT INTO `catering_order_items` (`id`, `catering_order_id`, `catering_item_id
 (10, 3, 4, 1, 7500.00, '2026-06-14 20:30:20', '2026-06-14 20:30:20'),
 (11, 4, 1, 1, 2500.00, '2026-06-14 20:41:03', '2026-06-14 20:41:03'),
 (12, 4, 4, 1, 7500.00, '2026-06-14 20:41:03', '2026-06-14 20:41:03'),
-(13, 4, 2, 1, 2500.00, '2026-06-14 20:41:03', '2026-06-14 20:41:03');
+(13, 4, 2, 1, 2500.00, '2026-06-14 20:41:03', '2026-06-14 20:41:03'),
+(14, 5, 2, 3, 2500.00, '2026-06-15 10:03:19', '2026-06-15 10:03:19'),
+(15, 6, 4, 10, 7500.00, '2026-06-15 10:11:44', '2026-06-15 10:11:44'),
+(16, 7, 4, 1, 7500.00, '2026-06-15 10:12:23', '2026-06-15 10:12:23'),
+(17, 7, 2, 2, 2500.00, '2026-06-15 10:12:23', '2026-06-15 10:12:23'),
+(18, 8, 3, 3, 3500.00, '2026-06-15 10:20:41', '2026-06-15 10:20:41'),
+(19, 8, 2, 2, 2500.00, '2026-06-15 10:20:41', '2026-06-15 10:20:41'),
+(20, 9, 1, 1, 2500.00, '2026-06-15 10:24:06', '2026-06-15 10:24:06'),
+(21, 9, 3, 3, 3500.00, '2026-06-15 10:24:06', '2026-06-15 10:24:06'),
+(22, 10, 3, 3, 3500.00, '2026-06-15 10:31:28', '2026-06-15 10:31:28'),
+(23, 10, 4, 5, 7500.00, '2026-06-15 10:31:28', '2026-06-15 10:31:28'),
+(24, 10, 5, 10, 3500.00, '2026-06-15 10:31:28', '2026-06-15 10:31:28'),
+(25, 11, 2, 2, 2500.00, '2026-06-15 10:40:42', '2026-06-15 10:40:42'),
+(26, 11, 4, 3, 7500.00, '2026-06-15 10:40:42', '2026-06-15 10:40:42'),
+(27, 12, 2, 5, 2500.00, '2026-06-15 10:46:55', '2026-06-15 10:46:55'),
+(28, 12, 4, 3, 7500.00, '2026-06-15 10:46:55', '2026-06-15 10:46:55'),
+(29, 12, 1, 2, 2500.00, '2026-06-15 10:46:55', '2026-06-15 10:46:55'),
+(30, 13, 3, 2, 3500.00, '2026-06-15 14:14:43', '2026-06-15 14:14:43'),
+(31, 13, 1, 3, 2500.00, '2026-06-15 14:14:43', '2026-06-15 14:14:43');
 
 -- --------------------------------------------------------
 
@@ -443,7 +463,7 @@ CREATE TABLE IF NOT EXISTS `payments` (
   UNIQUE KEY `payments_receipt_number_unique` (`receipt_number`),
   KEY `payments_event_booking_id_foreign` (`event_booking_id`),
   KEY `payments_user_id_foreign` (`user_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=63 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `payments`
@@ -462,7 +482,20 @@ INSERT INTO `payments` (`id`, `event_booking_id`, `payment_type`, `receipt_numbe
 (26, NULL, 'chambre', 'REC-RESTO-20260614-202554', 5000.00, 'cash', 'validé / encaissé', '2026-06-14 20:25:54', NULL, NULL, '2026-06-14 20:25:54', '2026-06-14 20:25:54'),
 (27, NULL, 'chambre', 'REC-RESTO-20260614-204121', 12500.00, 'cash', 'validé / encaissé', '2026-06-14 20:41:21', NULL, NULL, '2026-06-14 20:41:21', '2026-06-14 20:41:21'),
 (28, NULL, 'chambre', 'REC-RESTO-20260614-204351', 8500.00, 'mobile_money', 'validé / encaissé', '2026-06-14 20:43:51', NULL, NULL, '2026-06-14 20:43:51', '2026-06-14 20:43:51'),
-(29, NULL, 'chambre', 'REC-RESTO-20260614-204418', 2500.00, 'cash', 'validé / encaissé', '2026-06-14 20:44:24', NULL, NULL, '2026-06-14 20:44:24', '2026-06-14 20:44:24');
+(29, NULL, 'chambre', 'REC-RESTO-20260614-204418', 2500.00, 'cash', 'validé / encaissé', '2026-06-14 20:44:24', NULL, NULL, '2026-06-14 20:44:24', '2026-06-14 20:44:24'),
+(30, NULL, 'chambre', 'REC-RESTO-20260615-100332', 0.00, 'cash', 'validé / encaissé', '2026-06-15 10:03:32', NULL, NULL, '2026-06-15 10:03:32', '2026-06-15 10:03:32'),
+(31, NULL, 'chambre', 'REC-RESTO-20260615-101236', 12500.00, 'cash', 'validé / encaissé', '2026-06-15 10:12:36', NULL, NULL, '2026-06-15 10:12:36', '2026-06-15 10:12:36'),
+(32, NULL, 'chambre', 'REC-RESTO-20260615-101257', 75000.00, 'cash', 'validé / encaissé', '2026-06-15 10:12:57', NULL, NULL, '2026-06-15 10:12:57', '2026-06-15 10:12:57'),
+(33, NULL, 'chambre', 'REC-RESTO-20260615-102417', 13000.00, 'cash', 'validé / encaissé', '2026-06-15 10:24:17', NULL, NULL, '2026-06-15 10:24:17', '2026-06-15 10:24:17'),
+(34, NULL, 'chambre', 'REC-RESTO-20260615-103136', 83000.00, 'cash', 'validé / encaissé', '2026-06-15 10:31:36', NULL, NULL, '2026-06-15 10:31:36', '2026-06-15 10:31:36'),
+(35, NULL, 'chambre', 'REC-RESTO-20260615-103933', 7500.00, 'cash', 'validé / encaissé', '2026-06-15 10:39:33', NULL, NULL, '2026-06-15 10:39:33', '2026-06-15 10:39:33'),
+(36, NULL, 'chambre', 'REC-RESTO-20260615-103957', 15500.00, 'cash', 'validé / encaissé', '2026-06-15 10:39:57', NULL, NULL, '2026-06-15 10:39:57', '2026-06-15 10:39:57'),
+(37, NULL, 'chambre', 'REC-RESTO-20260615-104053', 27500.00, 'cash', 'validé / encaissé', '2026-06-15 10:40:53', NULL, NULL, '2026-06-15 10:40:53', '2026-06-15 10:40:53'),
+(38, NULL, 'chambre', 'REC-RESTO-20260615-104703', 40000.00, 'cash', 'validé / encaissé', '2026-06-15 10:47:03', NULL, NULL, '2026-06-15 10:47:03', '2026-06-15 10:47:03'),
+(40, 3, 'chambre', 'REC-20260615-105222', 5000.00, 'cash', 'validé / encaissé', '2026-06-15 10:52:33', NULL, NULL, '2026-06-15 10:52:33', '2026-06-15 10:52:33'),
+(58, NULL, 'chambre', 'REC-RESTO-20260615-141453', 14500.00, 'cash', 'validé / encaissé', '2026-06-15 14:14:53', NULL, NULL, '2026-06-15 14:14:53', '2026-06-15 14:14:53'),
+(60, 1, 'chambre', 'REC-SALLE-20260615-142417', 800000.00, 'card', 'validé / encaissé', '2026-06-15 14:24:28', NULL, NULL, '2026-06-15 14:24:28', '2026-06-15 14:24:28'),
+(62, 1, 'chambre', 'REC-SALLE-20260615-144123', 500000.00, 'card', 'validé / encaissé', '2026-06-15 14:41:45', NULL, NULL, '2026-06-15 14:41:45', '2026-06-15 14:41:45');
 
 -- --------------------------------------------------------
 
