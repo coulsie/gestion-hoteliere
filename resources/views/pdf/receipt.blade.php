@@ -81,18 +81,30 @@
     </div>
 
     <!-- Infos Clients -->
+        <!-- Infos Clients Sécurisées selon la Caisse -->
+       <!-- Infos Clients Sécurisées selon la Caisse -->
     <div style="display: flex; justify-content: space-between; margin-top: 20px;">
         <div>
-            <h4 style="margin: 0 0 5px 0; color: #777; text-transform: uppercase; font-size: 11px;">Rattaché à</h4>
-            <strong>Réservation N° {{ $booking->id }}</strong><br>
-            Chambre : N° {{ $booking->room?->number ?? 'N/A' }} ({{ $booking->room?->roomType?->name ?? 'N/A' }})
+            <h4 style="margin: 0 0 5px 0; color: #777; text-transform: uppercase; font-size: 11px;">Rattaché à / Client</h4>
+
+            @if(($payment->payment_type ?? '') === 'restauration')
+                <!-- SCÉNARIO B : Client de passage unique au restaurant -->
+                <strong>🍽️ Client Resto / Comptoir</strong><br>
+                <span style="font-size: 13px; color: #555;">Prestation : Consommation Directe</span>
+            @elseif(($payment->payment_type ?? '') === 'salle')
+                <!-- CAISSE ÉVÉNEMENTIELLE : Affichage complet avec le nom de l'organisation (ex: SIFCA) -->
+                <strong>🏢 Client : {{ $payment->eventBooking?->client_name ?? 'Organisation non définie' }}</strong><br>
+                <span style="font-size: 13px; color: #555;">Location : {{ $payment->eventBooking?->eventSpace?->name ?? 'Salle non définie' }}</span><br>
+                <span style="font-size: 12px; color: #777;">Dossier Événement N° {{ $payment->event_booking_id ?? 'N/A' }}</span>
+            @else
+                <!-- CAISSE HÉBERGEMENT : Client classique d'une chambre d'hôtel -->
+                <strong>🏨 Client : {{ $booking?->customer_name ?? 'Nom non défini' }}</strong><br>
+                <span style="font-size: 13px; color: #555;">Hébergement : Chambre N° {{ $booking?->room?->number ?? 'N/A' }} ({{ $booking?->room?->roomType?->name ?? 'N/A' }})</span><br>
+                <span style="font-size: 12px; color: #777;">Réservation Hôtel N° {{ $booking?->id ?? 'N/A' }}</span>
+            @endif
         </div>
-        <div style="text-align: right;">
-            <h4 style="margin: 0 0 5px 0; color: #777; text-transform: uppercase; font-size: 11px;">Mode de Règlement</h4>
-            <strong style="text-transform: uppercase; color: #0d6efd;">{{ $modeReglement }}</strong><br>
-            Statut : <span style="color: #198754; font-weight: bold;">Encaissé</span>
-        </div>
-    </div>
+
+
 
     <!-- Tableau de prestation -->
         <table class="details-table">
@@ -106,27 +118,24 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- Prestation 1 : L'hébergement de base (Chambre) -->
-                <tr>
-                    <td>Hébergement : Occupation de la Chambre N° {{ $booking?->room?->number ?? 'N/A' }}</td>
-                    <td style="text-align: right;">{{ number_format($prixUnitaire, 0, ',', ' ') }} FCFA</td>
-                    <td style="text-align: right;">{{ $texteDuree }}</td>
-                    <td style="text-align: right; font-weight: bold;">{{ number_format($booking?->prix_total ?? 0, 0, ',', ' ') }} FCFA</td>
-                </tr>
-
-                <!-- Prestations suivantes : Les consommations de restauration s'ajoutent toutes seules -->
-                @if($booking && $booking->cateringItems->count() > 0)
-                    @foreach($booking->cateringItems as $item)
-                        <tr>
-                            <td style="color: #555;">🍽️ Restauration : {{ $item->name ?? 'Consommation Restaurant' }} ({{ $item->created_at->format('d/m/Y') }})</td>
-                            <!-- Remplacez $item->price par votre colonne de montant si différente -->
-                            <td style="text-align: right; color: #555;">{{ number_format($item->price ?? 0, 0, ',', ' ') }} FCFA</td>
-                            <td style="text-align: right; color: #555;">1</td>
-                            <td style="text-align: right; color: #555; font-weight: bold;">{{ number_format($item->price ?? 0, 0, ',', ' ') }} FCFA</td>
-                        </tr>
-                    @endforeach
-                @endif
-            </tbody>
+    @if($payment->payment_type === 'restauration')
+        <!-- Ligne unique pour le ticket de caisse du restaurant comptoir -->
+        <tr>
+            <td>🍽️ Restauration : Vente au comptoir / Consommations diverses</td>
+            <td style="text-align: right;">{{ number_format($payment->amount, 0, ',', ' ') }} FCFA</td>
+            <td style="text-align: right;">1</td>
+            <td style="text-align: right; font-weight: bold;">{{ number_format($payment->amount, 0, ',', ' ') }} FCFA</td>
+        </tr>
+    @else
+        <!-- Votre hébergement d'origine (Conservez votre code existant ici pour les chambres/salles) -->
+        <tr>
+            <td>Hébergement : Occupation de la Chambre N° {{ $booking?->room?->number ?? 'N/A' }}</td>
+            <td style="text-align: right;">{{ number_format($prixUnitaire, 0, ',', ' ') }} FCFA</td>
+            <td style="text-align: right;">{{ $texteDuree }}</td>
+            <td style="text-align: right; font-weight: bold;">{{ number_format($booking?->total_price ?? 0, 0, ',', ' ') }} FCFA</td>
+        </tr>
+    @endif
+</tbody>
 
         </table>
 

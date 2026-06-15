@@ -10,9 +10,6 @@ use Filament\Resources\Resource;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Actions\EditAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
 
 class CateringItemResource extends Resource
 {
@@ -24,8 +21,6 @@ class CateringItemResource extends Resource
     protected static ?string $pluralModelLabel = 'Services Restauration';
     protected static ?string $modelLabel = 'Service Restauration';
 
-
-    // Signature native v5 avec Schema et components
     public static function form(Schema $schema): Schema
     {
         return $schema
@@ -61,7 +56,7 @@ class CateringItemResource extends Resource
 
                 Tables\Columns\TextColumn::make('category')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'plat' => 'info',
                         'boisson' => 'success',
                         'forfait_buffet' => 'warning',
@@ -74,11 +69,79 @@ class CateringItemResource extends Resource
                     ->label('Prix Unitaire'),
             ])
             ->actions([
-                EditAction::make(),
+                // FIX COMPATIBILITÉ : Utilisation de l'Action native de Filament
+                \Filament\Actions\EditAction::make(),
+
+                // BOUTON D'ENCAISSEMENT DIRECT POUR LES CLIENTS DU RESTAURANT EXTERNES
+                \Filament\Actions\Action::make('encaisser_restaurant')
+                    ->label('Encaisser & Reçu')
+                    ->icon('heroicon-o-banknotes')
+                    ->color('success')
+                    ->form([
+                        \Filament\Forms\Components\TextInput::make('receipt_number')
+                            ->label('Numéro de Reçu Restaurant')
+                            ->default('REC-RESTO-' . date('Ymd-His'))
+                            ->required()
+                            ->readOnly(),
+
+                        \Filament\Forms\Components\TextInput::make('client_passage')
+                            ->label('Nom du client (Optionnel)')
+                            ->placeholder('Ex: Client de passage au comptoir')
+                            ->default('Client de passage'),
+
+                        \Filament\Forms\Components\TextInput::make('amount')
+                            ->label('Montant de la Note (A Encaisser)')
+                            ->numeric()
+                            ->prefix('FCFA')
+                            ->required()
+                            ->default(fn($record) => (float) ($record->unit_price ?? 0)),
+
+                        \Filament\Forms\Components\Select::make('payment_method')
+                            ->label('Mode de règlement')
+                            ->options([
+                                'cash' => 'Espèces / Cash',
+                                'mobile_money' => 'Mobile Money (Orange/MTN/Wave)',
+                                'card' => 'Carte Bancaire',
+                            ])
+                            ->required()
+                            ->default('cash'),
+                    ])
+                    ->action(function (array $data, $record, \Filament\Actions\Action $action): void {
+                        $payment = \App\Models\Payment::create([
+                            'receipt_number'    => $data['receipt_number'],
+                            'event_booking_id'  => null,
+                            'amount'            => $data['amount'],
+                            'payment_method'    => $data['payment_method'],
+                            'payment_type'      => 'restauration',
+                            'status'            => 'validé / encaissé',
+                            'paid_at'           => now(),
+                        ]);
+
+
+                        // FIX URGENCE : Alignement du nom du paramètre sur 'record' pour correspondre à votre route web
+                        $url = route('payment.receipt.download', ['record' => $payment->id]);
+                        \Filament\Notifications\Notification::make()
+                            ->title('Note de restaurant encaissée !')
+                            ->actions([
+                                \Filament\Actions\Action::make('imprimer')
+                                    ->label('🖨️ Imprimer la note')
+                                    ->color('success')
+                                    ->url($url)
+                                    ->openUrlInNewTab(),
+                            ])
+                            ->body("Le reçu {$data['receipt_number']} d'un montant de " . number_format($data['amount'], 0, ',', ' ') . " FCFA a été validé avec succès.")
+                            ->success()
+                            ->send();
+
+                        $action->success();
+                    })
+                    ->requiresConfirmation()
+                    ->modalHeading('Encaisser un client externe au restaurant')
+                    ->modalSubmitActionLabel('Valider l\'encaissement comptoir'),
             ])
             ->bulkActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                \Filament\Actions\BulkActionGroup::make([
+                    \Filament\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -88,13 +151,10 @@ class CateringItemResource extends Resource
         return [];
     }
 
-
     public static function getPages(): array
     {
         return [
             'index' => CateringItemResource\Pages\ListCateringItems::route('/'),
         ];
     }
-
-
 }
