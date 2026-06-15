@@ -7,20 +7,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CateringOrderItem extends Model
 {
-    // Autorise l'enregistrement de toutes les colonnes (quantité, prix, etc.)
+    // FIX DÉFINITIF : On indique le nom exact de la table pivot créée par votre migration
+    protected $table = 'catering_order_items';
+
     protected $guarded = [];
 
-    /**
-     * Relation : Une ligne de commande appartient à une commande globale
-     */
     public function cateringOrder(): BelongsTo
     {
         return $this->belongsTo(CateringOrder::class, 'catering_order_id');
     }
 
-    /**
-     * Relation : Une ligne de commande est liée à un article de la carte du restaurant
-     */
     public function cateringItem(): BelongsTo
     {
         return $this->belongsTo(CateringItem::class, 'catering_item_id');
