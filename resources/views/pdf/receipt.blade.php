@@ -39,8 +39,17 @@
         $resteAPayer = max(0, $totalTheorique - $totalDejaPayeEnBdd);
     }
 
-    $methodes = ['cash' => 'Espèces / Cash', 'mobile_money' => 'Mobile Money', 'card' => 'Carte Bancaire', 'bank_transfer' => 'Virement Bancaire'];
-    $modeReglement = $methodes[$payment->payment_method] ?? ucfirst($payment->payment_method ?? 'Espèces');
+    // FIX TRADUCTION : Intégration complète et propre des passerelles de paiements mobiles et Wave
+    $methodes = [
+        'cash'          => 'Espèces / Cash',
+        'wave'          => 'Wave',
+        'orange_money'  => 'Orange Money',
+        'mtn_momo'      => 'MTN Mobile Money',
+        'moov_money'    => 'Moov Money',
+        'card'          => 'Carte Bancaire',
+        'bank_transfer' => 'Virement Bancaire'
+    ];
+    $modeReglement = $methodes[$payment->payment_method] ?? ucfirst(str_replace('_', ' ', $payment->payment_method ?? 'Espèces'));
     $datePaiement = \Illuminate\Support\Carbon::parse($payment->date_encaissement ?? $payment->created_at ?? now());
 @endphp
 

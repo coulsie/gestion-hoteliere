@@ -69,10 +69,10 @@ class CateringItemResource extends Resource
                     ->label('Prix Unitaire'),
             ])
             ->actions([
-                // FIX COMPATIBILITÉ : Utilisation de l'Action native de Filament
+                // 1. Action native d'édition
                 \Filament\Actions\EditAction::make(),
 
-                // BOUTON D'ENCAISSEMENT DIRECT POUR LES CLIENTS DU RESTAURANT EXTERNES
+                // 2. BOUTON D'ENCAISSEMENT DIRECT COMPTOIR AVEC TERMINAISON SCELLÉE
                 \Filament\Actions\Action::make('encaisser_restaurant')
                     ->label('Encaisser & Reçu')
                     ->icon('heroicon-o-banknotes')
@@ -99,9 +99,12 @@ class CateringItemResource extends Resource
                         \Filament\Forms\Components\Select::make('payment_method')
                             ->label('Mode de règlement')
                             ->options([
-                                'cash' => 'Espèces / Cash',
-                                'mobile_money' => 'Mobile Money (Orange/MTN/Wave)',
-                                'card' => 'Carte Bancaire',
+                                'cash' => '💵 Espèces / Cash',
+                                'wave' => '🌊 Wave',
+                                'orange_money' => '🍊 Orange Money',
+                                'mtn_momo' => '💛 MTN Mobile Money',
+                                'moov_money' => '💙 Moov Money',
+                                'card' => '💳 Carte Bancaire',
                             ])
                             ->required()
                             ->default('cash'),
@@ -114,12 +117,11 @@ class CateringItemResource extends Resource
                             'payment_method'    => $data['payment_method'],
                             'payment_type'      => 'restauration',
                             'status'            => 'validé / encaissé',
-                            'paid_at'           => now(),
+                            'date_encaissement' => now(),
                         ]);
 
-
-                        // FIX URGENCE : Alignement du nom du paramètre sur 'record' pour correspondre à votre route web
                         $url = route('payment.receipt.download', ['record' => $payment->id]);
+
                         \Filament\Notifications\Notification::make()
                             ->title('Note de restaurant encaissée !')
                             ->actions([
@@ -129,15 +131,15 @@ class CateringItemResource extends Resource
                                     ->url($url)
                                     ->openUrlInNewTab(),
                             ])
-                            ->body("Le reçu {$data['receipt_number']} d'un montant de " . number_format($data['amount'], 0, ',', ' ') . " FCFA a été validé avec succès.")
                             ->success()
                             ->send();
 
                         $action->success();
                     })
+                    // FIX SYNTAXE : Scellage obligatoire de la fenêtre modale Filament
                     ->requiresConfirmation()
-                    ->modalHeading('Encaisser un client externe au restaurant')
-                    ->modalSubmitActionLabel('Valider l\'encaissement comptoir'),
+                    ->modalHeading('Encaisser un client direct au comptoir')
+                    ->modalSubmitActionLabel('Émettre le Ticket Resto'),
             ])
             ->bulkActions([
                 \Filament\Actions\BulkActionGroup::make([

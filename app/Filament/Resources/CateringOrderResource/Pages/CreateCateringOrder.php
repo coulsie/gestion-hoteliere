@@ -10,28 +10,25 @@ class CreateCateringOrder extends CreateRecord
     protected static string $resource = CateringOrderResource::class;
 
     /**
-     * FIX TOTAL À LA CRÉATION : S'exécute juste après l'enregistrement
-     * de la commande et de ses articles pour mettre à jour la colonne total_amount.
+     * SÉCURITÉ COMPTABILITÉ : S'exécute juste après la création de la commande.
+     * Parcourt le tableau horizontal, crée la table pivot et sauvegarde le Montant Total.
      */
     protected function afterCreate(): void
     {
         $order = $this->record;
-        $total = 0;
+        $totalGeneral = 0;
 
-        // On calcule la somme directement depuis les lignes d'articles liées en BDD
+        // On force le rafraîchissement des relations à partir des lignes saisies dans la grille
         foreach ($order->items as $item) {
-            $total += ((float)$item->price) * ((int)$item->quantity);
+            $totalGeneral += ((float)$item->price) * ((int)$item->quantity);
         }
 
-        // On enregistre définitivement la vraie valeur numérique dans la table catering_orders
+        // On enregistre la somme arithmétique exacte dans la colonne total_amount
         $order->update([
-            'total_amount' => $total,
+            'total_amount' => $totalGeneral,
         ]);
     }
 
-    /**
-     * Redirection automatique vers la liste après création
-     */
     protected function getRedirectUrl(): string
     {
         return $this->getResource()::getUrl('index');
