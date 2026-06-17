@@ -60,7 +60,6 @@ public static function form(Schema $schema): Schema
                     static::calculerTarifDynamique($get, $set);
                 }),
 
-
             Forms\Components\DatePicker::make('check_in')
                 ->label('Date d\'arrivée')
                 ->default(now())
@@ -123,15 +122,15 @@ public static function form(Schema $schema): Schema
                     return str_contains($type, 'passage') || str_contains($type, 'heure');
                 }),
 
-            // AJOUT : Association de la carte magnétique d'accès (RFID)
+            // AJOUT : Association de la carte magnétique d'accès (RFID) sécurisée
             Forms\Components\Select::make('key_card_id')
                 ->label('Attribuer une Carte Magnétique')
                 ->relationship('keyCard', 'uid')
                 ->placeholder('Sélectionnez ou scannez une carte RFID')
                 ->searchable()
                 ->preload()
-                // Charge uniquement les cartes au statut 'active'
-                ->options(function () {
+                // FIX DÉFINITIF : Injection des 4 arguments système pour briser le cache et l'erreur d'arguments
+                ->options(function ($state, $set, $get, $component) {
                     return \App\Models\KeyCard::where('status', 'active')
                         ->get()
                         ->mapWithKeys(function ($card) {
@@ -246,19 +245,36 @@ public static function table(Table $table): Table
             EditAction::make(),
 
             // Bouton d'encaissement direct et intelligent
+                      // Bouton d'encaissement direct et intelligent hôtel sécurisé
             \Filament\Actions\Action::make('passer_au_paiement')
                 ->label(function ($record) {
+                    $total = (float) ($record->total_price ?? 0);
+                    // FIX : Si le prix de la chambre vaut 0, on demande de configurer le tarif au lieu de marquer Soldé
+                    if ($total <= 0) {
+                        return 'Tarif non défini';
+                    }
+
                     $dejaPaye = \App\Models\Payment::getSommePayeePourReservation($record->id);
-                    return (($record->total_price ?? 0) - $dejaPaye) <= 0 ? 'Soldé' : 'Passer au paiement';
+                    return ($total - $dejaPaye) <= 0 ? 'Soldé' : 'Passer au paiement';
                 })
                 ->icon('heroicon-o-banknotes')
                 ->color(function ($record) {
+                    $total = (float) ($record->total_price ?? 0);
+                    if ($total <= 0) {
+                        return 'gray';
+                    }
+
                     $dejaPaye = \App\Models\Payment::getSommePayeePourReservation($record->id);
-                    return (($record->total_price ?? 0) - $dejaPaye) <= 0 ? 'gray' : 'success';
+                    return ($total - $dejaPaye) <= 0 ? 'gray' : 'success';
                 })
                 ->disabled(function ($record) {
+                    $total = (float) ($record->total_price ?? 0);
+                    if ($total <= 0) {
+                        return true;
+                    }
+
                     $dejaPaye = \App\Models\Payment::getSommePayeePourReservation($record->id);
-                    return (($record->total_price ?? 0) - $dejaPaye) <= 0;
+                    return ($total - $dejaPaye) <= 0;
                 })
                 ->form([
                     TextInput::make('receipt_number')
@@ -280,15 +296,20 @@ public static function table(Table $table): Table
                         ->required()
                         ->hint('Modifiable si paiement partiel'),
 
+                    // INTERFACE COMPLÈTE HARMONISÉE AVEC LES ÉMOJIS
                     Select::make('payment_method')
                         ->label('Mode de règlement')
                         ->options([
-                            'cash' => 'Espèces / Cash',
-                            'card' => 'Carte Bancaire',
-                            'mobile_money' => 'Mobile Money',
-                            'bank_transfer' => 'Virement Bancaire',
+                            'cash'          => '💵 Espèces / Cash',
+                            'wave'          => '🌊 Wave',
+                            'orange_money'  => '🍊 Orange Money',
+                            'mtn_momo'      => '💛 MTN Mobile Money',
+                            'moov_money'    => '💙 Moov Money',
+                            'card'          => '💳 Carte Bancaire',
+                            'bank_transfer' => '🏦 Virement Bancaire',
                         ])
-                        ->required(),
+                        ->required()
+                        ->default('cash'),
                 ])
                 ->mountUsing(function ($form, $record) {
                     $dejaPaye = \App\Models\Payment::getSommePayeePourReservation($record->id);
@@ -301,17 +322,29 @@ public static function table(Table $table): Table
                     ]);
                 })
                 ->action(function (array $data, $record, \Filament\Actions\Action $action): void {
-                    // 1. Enregistrement du paiement en Base de Données
-                    $payment = \App\Models\Payment::create([
+                    // 1. Enregistrement du paiement lié à l'hôtel (booking_id unifié)
+                   $payment = \App\Models\Payment::create([
                         'receipt_number'    => $data['receipt_number'],
-                        'event_booking_id'  => $record->id,
+                        'event_booking_id'  => $record->id, // ALIGNEMENT : Écrit dans la vraie colonne physique
                         'amount'            => $data['amount'],
                         'payment_method'    => $data['payment_method'],
+                        'payment_type'      => 'chambre',
                         'status'            => 'validé / encaissé',
                         'date_encaissement' => now(),
                     ]);
 
-                    $url = route('payments.receipt', ['payment' => $payment->id]);
+                     // 🔥 ALERTE INSTANTANÉE PROPRIÉTAIRE (HÔTEL)
+                    \App\Services\TelegramService::notifierAlerteEncaissment(
+                        caisse: 'chambre',
+                        client: $record->customer_name ?? 'Client Hôtel',
+                        montant: (float) $data['amount'],
+                        methode: $data['payment_method'],
+                        numRecu: $data['receipt_number']
+                    );
+
+                    $url = route('payment.receipt.download', ['record' => $payment->id]);
+
+
 
                     \Filament\Notifications\Notification::make()
                         ->title('Paiement enregistré !')
@@ -328,6 +361,7 @@ public static function table(Table $table): Table
 
                     $action->success();
                 })
+
                 ->requiresConfirmation()
                 ->modalHeading('Créer un paiement direct')
                 ->modalSubmitActionLabel('Valider l\'encaissement'),

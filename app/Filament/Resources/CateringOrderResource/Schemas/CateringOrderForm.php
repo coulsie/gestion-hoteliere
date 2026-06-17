@@ -1,8 +1,13 @@
 <?php
 
-namespace App\Filament\Resources\CateringOrders\Schemas;
+
+
+namespace App\Filament\Resources\CateringOrderResource\Schemas; // FIX : Singulier
+
 
 use Filament\Schemas\Schema;
+
+use App\Filament\Resources\CateringOrderResource;
 
 class CateringOrderForm
 {

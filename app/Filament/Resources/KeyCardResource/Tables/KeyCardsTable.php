@@ -1,6 +1,9 @@
 <?php
 
-namespace App\Filament\Resources\KeyCards\Tables;
+
+
+namespace App\Filament\Resources\KeyCardResource\Tables; // FIX : Doit correspondre au dossier Tables
+
 
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;

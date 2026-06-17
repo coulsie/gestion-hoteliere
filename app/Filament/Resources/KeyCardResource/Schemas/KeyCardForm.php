@@ -1,6 +1,8 @@
 <?php
 
-namespace App\Filament\Resources\KeyCards\Schemas;
+
+namespace App\Filament\Resources\KeyCardResource\Schemas; // FIX : Singulier
+
 
 use Filament\Schemas\Schema;
 

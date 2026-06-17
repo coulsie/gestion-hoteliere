@@ -44,46 +44,8 @@ class Payment extends Model
     /**
      * Calcule le total déjà payé par le client pour une réservation donnée
      */
-   public static function getSommePayeePourReservation(int|string|null $bookingId): float
-{
-    if (! $bookingId) {
-        return 0.0;
-    }
-
-    return (float) static::where('event_booking_id', $bookingId)
-        // FIX : On demande à SQL de faire la somme des paiements 'completed' ET 'validé / encaissé'
-        ->whereIn('status', ['completed', 'validé / encaissé'])
-        ->sum('amount');
-}
-
-    /**
-     * Calcule le cumul déjà payé pour une location de salle
-     */
-
-    /**
-     * Calcule le cumul déjà payé pour une location de salle
-     */
-        /**
-     * Calcule le cumul déjà payé pour une location de salle
-     */
-        /**
-     * Calcule le cumul déjà payé pour une location de salle
-     */
 
 
-    /**
-     * Calcule le cumul déjà payé pour une location de salle
-     */
-
-
-    /**
-     * Calcule le cumul déjà payé pour une location de salle
-     */
-    
-
-    /**
-     * Calcule le cumul déjà payé pour une location de salle
-     */
     public static function getSommePayeePourSalle(int|string|null $bookingId): float
     {
         // FIX DE SECOURS DE MASSE : Additionne tous les versements de salles pour débloquer la caisse
@@ -91,5 +53,34 @@ class Payment extends Model
             ->where('payment_type', 'salle')
             ->sum('amount');
     }
+
+
+    /**
+     * CLOISONNEMENT HÔTEL : Calcule le cumul déjà payé pour une SEULE chambre précise.
+     */
+       /**
+     * CLOISONNEMENT HÔTEL : Calcule le cumul déjà payé pour une SEULE chambre précise.
+     */
+    public static function getSommePayeePourReservation(int|string|null $bookingId): float
+    {
+        if (! $bookingId) {
+            return 0.0;
+        }
+
+        // FIX DÉFINITIF BDD : Remplacement de booking_id par event_booking_id (la vraie colonne de votre table)
+        return (float) static::where('event_booking_id', $bookingId)
+            ->where('payment_type', 'chambre')
+            ->whereIn('status', ['completed', 'validé / encaissé'])
+            ->sum('amount');
+    }
+
+    /**
+     * Relation avec la réservation de chambre d'hôtel
+     */
+    public function booking()
+    {
+        return $this->belongsTo(Booking::class, 'booking_id');
+    }
+
 
 }

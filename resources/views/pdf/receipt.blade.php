@@ -1,10 +1,13 @@
 @php
-    // 1. DÉTECTION DE LA CAISSE SÉCURISÉE
+    // 1. DÉTECTION RIGOUREUSE DES TROIS CAISSES DISTINCTES
     $numRecu = $payment->receipt_number ?? '';
+
+    // Une recette est une chambre SI marquée en BDD ou si le reçu commence par REC- (sans RESTO ni SALLE)
     $estRestaurant = ($payment->payment_type === 'restauration' || str_starts_with($numRecu, 'REC-RESTO-'));
     $estSalle = ($payment->payment_type === 'salle' || str_starts_with($numRecu, 'REC-SALLE-'));
+    $estChambre = ($payment->payment_type === 'chambre' || (! $estRestaurant && ! $estSalle));
 
-    // 2. RÉCUPÉRATION DU DOSSIER CLIENT
+    // 2. RÉCUPÉRATION DU DOSSIER CLIENT (Avec reconnexions de sécurité)
     $booking = $booking ?? $payment->eventBooking ?? null;
     if (!$booking && $payment->event_booking_id) {
         $booking = \App\Models\EventBooking::with('eventSpace')->find($payment->event_booking_id);
@@ -19,27 +22,34 @@
         $totalTheorique = $booking ? (float)($booking->grand_total ?? $booking->total_price ?? 0) : (float)$payment->amount;
     }
 
-    // 4. FIX HISTORIQUE CUMULÉ : On additionne tous les reçus de salle pour cet événement
+    // 4. FIX HISTORIQUE CUMULÉ CLOISONNÉ (Isolation stricte par event_booking_id)
     $bookingId = $booking?->id ?? $payment->event_booking_id ?? 0;
+
     if ($estRestaurant) {
         $totalDejaPayeEnBdd = (float) $payment->amount;
         $resteAPayer = 0;
     } elseif ($estSalle) {
-        // SQL DIRECT : Calcule la somme brute de TOUTES les tranches payées par la SIFCA
+        // FIX PARENTHÈSES SQL : Calcule uniquement le cumul des reçus de CET ÉVÉNEMENT PRÉCIS
         $totalDejaPayeEnBdd = (float) \Illuminate\Support\Facades\DB::table('payments')
-            ->where('payment_type', 'salle')
-            ->orWhere('receipt_number', 'LIKE', 'REC-SALLE-%')
+            ->where('event_booking_id', $bookingId)
+            ->where(function ($query) {
+                $query->where('payment_type', 'salle')
+                      ->orWhere('receipt_number', 'LIKE', 'REC-SALLE-%');
+            })
             ->sum('amount');
 
-        // Le reste à payer est la soustraction arithmétique exacte
+        // Sécurité si la BDD est en retard sur le cumul
+        if ($totalDejaPayeEnBdd <= 0) {
+            $totalDejaPayeEnBdd = (float) $payment->amount;
+        }
+
         $resteAPayer = max(0, $totalTheorique - $totalDejaPayeEnBdd);
     } else {
-        // Hôtel
+        // Hôtel / Chambres
         $totalDejaPayeEnBdd = \App\Models\Payment::getSommePayeePourReservation($bookingId);
         $resteAPayer = max(0, $totalTheorique - $totalDejaPayeEnBdd);
     }
 
-    // FIX TRADUCTION : Intégration complète et propre des passerelles de paiements mobiles et Wave
     $methodes = [
         'cash'          => 'Espèces / Cash',
         'wave'          => 'Wave',
@@ -80,18 +90,19 @@
         </div>
     </div>
 
-    <!-- CLIENT -->
+    <!-- CLIENT (SÉCURISÉ) -->
     <div style="display: flex; justify-content: space-between; margin-top: 20px; font-size: 14px;">
         <div>
-            <span style="color:#777; font-size:11px; text-transform:uppercase; display:block;">Client</span>
+            <span style="color:#777; font-size:11px; text-transform:uppercase; display:block;">Bénéficiaire / Client</span>
             @if($estRestaurant)
-                <strong>🍽️ Client Resto / Comptoir</strong>
+                <strong>🍽️ Client Resto de Passage</strong>
             @elseif($estSalle)
                 <strong>🏢 Client : {{ $booking?->client_name ?? 'Organisation N/A' }}</strong><br>
                 <small>Salle : {{ $booking?->eventSpace?->name ?? 'N/A' }}</small>
             @else
-                <strong>🏨 Client : {{ $booking?->customer_name ?? 'Nom N/A' }}</strong><br>
-                <small>Chambre N° {{ $booking?->room?->number ?? 'N/A' }}</small>
+                <!-- FIX ACQUISITION CLIENT : Lecture croisée pour extraire le vrai résident de l'hôtel -->
+                <strong>🏨 Client : {{ $booking?->customer_name ?? $payment->booking?->customer_name ?? 'Client Hôtel' }}</strong><br>
+                <small>Chambre N° {{ $booking?->room?->number ?? $payment->booking?->room?->number ?? 'N/A' }}</small>
             @endif
         </div>
         <div style="text-align:right;">
@@ -100,7 +111,7 @@
         </div>
     </div>
 
-    <!-- GRILLE -->
+    <!-- GRILLE DE PRESTATIONS -->
     <table>
         <thead>
             <tr>
@@ -133,7 +144,8 @@
                 @endforelse
             @else
                 <tr>
-                    <td>{{ $estSalle ? '🏢 Location d\'Espace' : '🏨 Occupation de Chambre' }}</td>
+                    <!-- FIX DÉSIGNATION : Affiche la bonne étiquette selon la caisse sélectionnée -->
+                    <td>{{ $estSalle ? '🏢 Location d\'Espace Événementiel' : '🏨 Hébergement : Occupation de Chambre' }}</td>
                     <td style="text-align:right;">{{ number_format($totalTheorique, 0, ',', ' ') }} F CFA</td>
                     <td style="text-align:center;">1</td>
                     <td style="text-align:right; font-weight:bold;">{{ number_format($totalTheorique, 0, ',', ' ') }} F CFA</td>
@@ -142,7 +154,7 @@
         </tbody>
     </table>
 
-    <!-- TOTAL -->
+    <!-- TOTAL FINANCIER -->
     <div style="margin-top:20px; float:right; width:380px; font-size:14px; line-height:1.8;">
         @if($estRestaurant)
             <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:3px 0;">
@@ -155,7 +167,7 @@
             </div>
         @else
             <div style="display:flex; justify-content:space-between; border-bottom:1px solid #dee2e6; padding:4px 0;">
-                <span style="color:#666;">Coût total de la prestation :</span>
+                <span>Coût total de la prestation :</span>
                 <span style="font-weight:bold;">{{ number_format($totalTheorique, 0, ',', ' ') }} FCFA</span>
             </div>
             <div style="display:flex; justify-content:space-between; border-bottom:1px solid #dee2e6; padding:4px 0; color:#198754;">
@@ -176,3 +188,4 @@
     <div style="clear:both;"></div>
 </body>
 </html>
+

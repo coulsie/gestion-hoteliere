@@ -59,8 +59,7 @@ class RoomResource extends Resource
 }
 
 
-    // Tableau d'affichage avec badges de couleur
-   public static function table(Table $table): Table
+ public static function table(Table $table): Table
 {
     return $table
         ->columns([
@@ -72,7 +71,7 @@ class RoomResource extends Resource
             Tables\Columns\TextColumn::make('roomType.name')
                 ->label('Type'),
 
-            // SÉCURITÉ UNIFIÉE : Nouvelle colonne d'état avec couleur en badge
+            // SÉCURITÉ UNIFIÉE : Colonne d'état de ménage avec couleur en badge
             Tables\Columns\TextColumn::make('housekeeping_status')
                 ->label('État de la Chambre')
                 ->badge()
@@ -103,13 +102,16 @@ class RoomResource extends Resource
                 ])
         ])
         ->actions([
-            EditAction::make(),
+            // FIX COMPATIBILITÉ : Utilisation de l'Action native unifiée
+            \Filament\Actions\EditAction::make(),
         ])
-        ->bulkActions([
-            BulkActionGroup::make([
-                DeleteBulkAction::make(),
+               ->bulkActions([
+            // FIX MODERNISATION V4/V5 : Chemins absolus natifs sans le dossier Tables
+            \Filament\Actions\BulkActionGroup::make([
+                \Filament\Actions\DeleteBulkAction::make(),
             ]),
         ]);
+
 }
 
     public static function getRelations(): array

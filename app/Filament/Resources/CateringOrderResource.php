@@ -203,8 +203,16 @@ class CateringOrderResource extends Resource
                             'status'            => 'validé / encaissé',
                             'date_encaissement' => now(),
                         ]);
+   // 🔥 ALERTE INSTANTANÉE PROPRIÉTAIRE (RESTAURANT)
+                    \App\Services\TelegramService::notifierAlerteEncaissment(
+                        caisse: 'restauration',
+                        client: $record->client_name ?? 'Client Comptoir',
+                        montant: $montantFinal,
+                        methode: $data['payment_method'],
+                        numRecu: $payment->receipt_number
+                    );
 
-                        // Mise à jour de l'état de la commande de restaurant
+                    // Mise à jour de l'état de la commande de restaurant
                         $record->update([
                             'status' => 'paye',
                             'total_amount' => $montantFinal
