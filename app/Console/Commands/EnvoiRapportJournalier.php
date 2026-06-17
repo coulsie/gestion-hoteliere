@@ -5,6 +5,8 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use App\Services\TelegramService;
+use App\Services\WhatsAppService;
+use App\Services\SmsService;
 use Carbon\Carbon;
 
 class EnvoiRapportJournalier extends Command
@@ -12,22 +14,22 @@ class EnvoiRapportJournalier extends Command
     protected $signature = 'rapport:send-proprietaire';
     protected $description = 'Calcule et envoie le bilan financier du jour au propriétaire';
 
-        public function handle()
+    public function handle()
     {
-        $aujourdhui = \Carbon\Carbon::today();
+        $aujourdhui = Carbon::today();
 
         // 1. CALCUL DES RECETTES PAR CAISSE (ALIGNÉ SUR LA COLONNE PHYSIQUE paid_at)
-        $recetteHotel = (float) \Illuminate\Support\Facades\DB::table('payments')
+        $recetteHotel = (float) DB::table('payments')
             ->where('payment_type', 'chambre')
             ->whereDate('paid_at', $aujourdhui)
             ->sum('amount');
 
-        $recetteSalle = (float) \Illuminate\Support\Facades\DB::table('payments')
+        $recetteSalle = (float) DB::table('payments')
             ->where('payment_type', 'salle')
             ->whereDate('paid_at', $aujourdhui)
             ->sum('amount');
 
-        $recetteResto = (float) \Illuminate\Support\Facades\DB::table('payments')
+        $recetteResto = (float) DB::table('payments')
             ->where('payment_type', 'restauration')
             ->whereDate('paid_at', $aujourdhui)
             ->sum('amount');
@@ -35,15 +37,15 @@ class EnvoiRapportJournalier extends Command
         $totalGeneral = $recetteHotel + $recetteSalle + $recetteResto;
 
         // 2. STATISTIQUES OPÉRATIONNELLES (ALIGNÉ SUR LES COLONNES COMPATIBLES AVEC VOS TABLES)
-        $chambresLouees = \Illuminate\Support\Facades\DB::table('bookings')
+        $chambresLouees = DB::table('bookings')
             ->whereDate('check_in', $aujourdhui)
             ->count();
 
-        $evenementsValidess = \Illuminate\Support\Facades\DB::table('event_bookings')
+        $evenementsValidess = DB::table('event_bookings')
             ->whereDate('start_time', $aujourdhui)
             ->count();
 
-        $commandesResto = \Illuminate\Support\Facades\DB::table('catering_orders')
+        $commandesResto = DB::table('catering_orders')
             ->whereDate('created_at', $aujourdhui)
             ->count();
 
@@ -64,14 +66,22 @@ class EnvoiRapportJournalier extends Command
 
         $texteMessage .= "🟢 <i>Logiciel opérationnel - Système Stable.</i>";
 
-        // 4. ENVOI VIA LE CANAL TELEGRAM
-                // Envoi du bilan financier sur WhatsApp en ignorant le SSL local
+        // Nettoyage des balises HTML pour les canaux au format texte brut (WhatsApp & SMS)
         $messageBrut = strip_tags($texteMessage);
-        \App\Services\WhatsAppService::envoyerWhatsApp($messageBrut);
 
+        // 🚀 4. ENVOI MULTI-CANAL SIMULTANÉ SANS INTERRUPTION
 
-        $this->info('Rapport financier envoyé avec succès au propriétaire !');
+        // Canal 1 : Telegram (Supporte et affiche le formatage gras HTML)
+        TelegramService::envoyerNotification($texteMessage);
+
+        // Canal 2 : WhatsApp (Via votre passerelle Twilio)
+        WhatsAppService::envoyerWhatsApp($messageBrut);
+
+        // Canal 3 : SMS Classique Cellulaire (Texte brut direct)
+        SmsService::envoyerSms($messageBrut);
+
+        $this->info('Rapport financier envoyé avec succès sur tous les canaux (Telegram + WhatsApp + SMS) !');
+
         return Command::SUCCESS;
     }
-
 }
