@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.3
+-- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1:3307
--- Généré le : lun. 15 juin 2026 à 16:24
--- Version du serveur : 11.4.9-MariaDB
--- Version de PHP : 8.3.28
+-- Généré le : mer. 17 juin 2026 à 08:52
+-- Version du serveur : 11.5.2-MariaDB
+-- Version de PHP : 8.3.14
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -91,6 +91,14 @@ CREATE TABLE IF NOT EXISTS `cache` (
   KEY `cache_expiration_index` (`expiration`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Déchargement des données de la table `cache`
+--
+
+INSERT INTO `cache` (`key`, `value`, `expiration`) VALUES
+('laravel-cache-livewire-rate-limiter:16d36dff9abd246c67dfac3e63b993a169af77e6:timer', 'i:1781620013;', 1781620013),
+('laravel-cache-livewire-rate-limiter:16d36dff9abd246c67dfac3e63b993a169af77e6', 'i:1;', 1781620013);
+
 -- --------------------------------------------------------
 
 --
@@ -155,7 +163,7 @@ CREATE TABLE IF NOT EXISTS `catering_orders` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `catering_orders_order_number_unique` (`order_number`),
   KEY `catering_orders_booking_id_foreign` (`booking_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `catering_orders`
@@ -175,7 +183,9 @@ INSERT INTO `catering_orders` (`id`, `order_number`, `booking_id`, `client_name`
 (11, 'CMD-20260615-1040-37', NULL, 'Client Comptoir', 27500.00, 'paye', '2026-06-15 10:40:42', '2026-06-15 10:40:53'),
 (12, 'CMD-20260615-1046-13', NULL, 'Client Comptoir', 40000.00, 'paye', '2026-06-15 10:46:55', '2026-06-15 10:47:03'),
 (13, 'CMD-20260615-1414-44', NULL, 'Client Comptoir', 14500.00, 'paye', '2026-06-15 14:14:43', '2026-06-15 14:14:53'),
-(14, 'CMD-20260615-1610-17', NULL, 'Client Comptoir', 880000.00, 'paye', '2026-06-15 16:10:46', '2026-06-15 16:11:01');
+(14, 'CMD-20260615-1610-17', NULL, 'Client Comptoir', 880000.00, 'paye', '2026-06-15 16:10:46', '2026-06-15 16:11:01'),
+(15, 'CMD-20260616-1442-20', NULL, 'Client Comptoir', 705000.00, 'paye', '2026-06-16 14:42:21', '2026-06-16 14:42:44'),
+(16, 'CMD-20260616-1513-92', NULL, 'Client Comptoir', 37000.00, 'paye', '2026-06-16 15:13:23', '2026-06-16 15:13:47');
 
 -- --------------------------------------------------------
 
@@ -195,7 +205,7 @@ CREATE TABLE IF NOT EXISTS `catering_order_items` (
   PRIMARY KEY (`id`),
   KEY `catering_order_items_catering_order_id_foreign` (`catering_order_id`),
   KEY `catering_order_items_catering_item_id_foreign` (`catering_item_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=34 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `catering_order_items`
@@ -234,7 +244,12 @@ INSERT INTO `catering_order_items` (`id`, `catering_order_id`, `catering_item_id
 (30, 13, 3, 2, 3500.00, '2026-06-15 14:14:43', '2026-06-15 14:14:43'),
 (31, 13, 1, 3, 2500.00, '2026-06-15 14:14:43', '2026-06-15 14:14:43'),
 (32, 14, 1, 2, 2500.00, '2026-06-15 16:10:46', '2026-06-15 16:10:46'),
-(33, 14, 3, 250, 3500.00, '2026-06-15 16:10:46', '2026-06-15 16:10:46');
+(33, 14, 3, 250, 3500.00, '2026-06-15 16:10:46', '2026-06-15 16:10:46'),
+(34, 15, 1, 2, 2500.00, '2026-06-16 14:42:21', '2026-06-16 14:42:21'),
+(35, 15, 3, 200, 3500.00, '2026-06-16 14:42:21', '2026-06-16 14:42:21'),
+(36, 16, 2, 2, 2500.00, '2026-06-16 15:13:23', '2026-06-16 15:13:23'),
+(37, 16, 1, 3, 2500.00, '2026-06-16 15:13:23', '2026-06-16 15:13:23'),
+(38, 16, 5, 7, 3500.00, '2026-06-16 15:13:23', '2026-06-16 15:13:23');
 
 -- --------------------------------------------------------
 
@@ -466,7 +481,7 @@ CREATE TABLE IF NOT EXISTS `payments` (
   UNIQUE KEY `payments_receipt_number_unique` (`receipt_number`),
   KEY `payments_event_booking_id_foreign` (`event_booking_id`),
   KEY `payments_user_id_foreign` (`user_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=66 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=68 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `payments`
@@ -501,7 +516,9 @@ INSERT INTO `payments` (`id`, `event_booking_id`, `payment_type`, `receipt_numbe
 (60, 1, 'chambre', 'REC-SALLE-20260615-142417', 800000.00, 'card', 'validé / encaissé', '2026-06-15 14:24:28', NULL, NULL, '2026-06-15 14:24:28', '2026-06-15 14:24:28'),
 (62, 1, 'chambre', 'REC-SALLE-20260615-144123', 500000.00, 'card', 'validé / encaissé', '2026-06-15 14:41:45', NULL, NULL, '2026-06-15 14:41:45', '2026-06-15 14:41:45'),
 (63, 1, 'chambre', 'REC-SALLE-20260615-144924', 50000.00, 'cash', 'validé / encaissé', '2026-06-15 14:49:40', NULL, NULL, '2026-06-15 14:49:40', '2026-06-15 14:49:40'),
-(64, 1, 'chambre', 'REC-SALLE-20260615-153610', 82000.00, 'cash', 'validé / encaissé', '2026-06-15 15:36:22', NULL, NULL, '2026-06-15 15:36:22', '2026-06-15 15:36:22');
+(64, 1, 'chambre', 'REC-SALLE-20260615-153610', 82000.00, 'cash', 'validé / encaissé', '2026-06-15 15:36:22', NULL, NULL, '2026-06-15 15:36:22', '2026-06-15 15:36:22'),
+(66, NULL, 'chambre', 'REC-RESTO-20260616-144244', 705000.00, 'cash', 'validé / encaissé', '2026-06-16 14:42:44', NULL, NULL, '2026-06-16 14:42:44', '2026-06-16 14:42:44'),
+(67, NULL, 'chambre', 'REC-RESTO-20260616-151347', 37000.00, 'wave', 'validé / encaissé', '2026-06-16 15:13:47', NULL, NULL, '2026-06-16 15:13:47', '2026-06-16 15:13:47');
 
 -- --------------------------------------------------------
 
@@ -632,7 +649,7 @@ CREATE TABLE IF NOT EXISTS `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`) VALUES
-(1, 'Admin', 'coulsie@gmail.com', NULL, '$2y$12$yeTcnk5PNKO.tqWPd4Vikeer/Dxcf3EAQO5ceVVszUB4CXnWqvZCe', NULL, '2026-06-08 11:39:21', '2026-06-08 11:45:00');
+(1, 'Admin', 'coulsie@gmail.com', NULL, '$2y$12$yeTcnk5PNKO.tqWPd4Vikeer/Dxcf3EAQO5ceVVszUB4CXnWqvZCe', 'OaD10rxGMUOuzg6TQ9YNCOKzKCwAvUE4iWYUkpRuHJjYufWDcv6f6e27ifTU', '2026-06-08 11:39:21', '2026-06-08 11:45:00');
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
