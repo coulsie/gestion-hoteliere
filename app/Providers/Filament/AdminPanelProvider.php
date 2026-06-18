@@ -11,7 +11,9 @@ use App\Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Navigation\MenuItem; // 🔥 IMPORTATION DE LA CLASSE EXACTE COMPATIBLE v3
+use Filament\Navigation\NavigationGroup;
+use Filament\View\PanelsRenderHook; // 🔥 IMPORTATION DU SYSTEME DE HOOK V5
+use Illuminate\Support\Facades\Blade; // 🔥 REQUIS POUR LE RENDU DU LINK CSS
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -28,17 +30,56 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+
+            // 🎨 PALETTE ÉCLATANTE HAUTE SÉLECTION (Couleurs néons ultra contrastées)
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::Fuchsia,
+                'success' => Color::Lime,
+                'danger'  => Color::Red,
+                'warning' => Color::Yellow,
+                'info'    => Color::Cyan,
+                'gray'    => Color::Slate,
             ])
+
+            // Force la barre supérieure et certains composants à adopter le style contrasté
+            ->darkMode(true)
+
+            ->sidebarCollapsibleOnDesktop()
+
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
                 Dashboard::class,
             ])
 
-            // 🔥 FIX TYPAGE COMPATIBLE v3 : Utilisation de l'objet MenuItem pour la déconnexion native
-            
+            // 🔥 CONFIGURATION VALIDE EN V5 : Injection du CSS via un Render Hook au niveau du Head HTML
+            ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                fn (): string => Blade::render('<link rel="stylesheet" href="{{ asset(\'css/custom-neon.css\') }}">'),
+            )
+
+            // 🚀 INJECTION DES DOSSIERS AVEC TITRES COLORELS DANS L'INTERFACE
+            ->navigationGroups([
+                NavigationGroup::make()
+                    ->label('Gestion Hôtelière')
+                    ->icon('heroicon-o-building-office-2'),
+
+                NavigationGroup::make()
+                    ->label('Gestion des Espaces')
+                    ->icon('heroicon-o-squares-2x2'),
+
+                NavigationGroup::make()
+                    ->label('Services Restauration')
+                    ->icon('heroicon-o-cake'),
+
+                NavigationGroup::make()
+                    ->label('Gestion Financière')
+                    ->icon('heroicon-o-banknotes'),
+
+                NavigationGroup::make()
+                    ->label('Configuration')
+                    ->icon('heroicon-o-cog-6-tooth'),
+            ])
 
             ->widgets([
                 \App\Filament\Widgets\PaymentMethodsChart::class,

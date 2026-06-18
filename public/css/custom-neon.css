@@ -1,0 +1,68 @@
+/* --- APPALENCE LUMINEUSE ET COULEURS ÉCLATANTES --- */
+
+/* Arrière-plan du menu latéral : Blanc pur style Bootstrap Light */
+.fi-sidebar {
+    background: #ffffff !important;
+    border-right: 2px solid #e2e8f0 !important; /* Ligne de séparation grise épurée */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important; /* Ombre très légère et moderne */
+}
+
+/* Titres des dossiers (Groupes de navigation) : Bleu Cyan Intense */
+.fi-sidebar-group-label {
+    color: #0284c7 !important; /* Bleu Océan vif et lisible */
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.08em !important;
+    font-size: 11px !important;
+    padding-bottom: 6px !important;
+}
+
+/* Boutons / Liens de navigation du menu */
+.fi-sidebar-item-button {
+    border-radius: 8px !important;
+    margin: 4px 10px !important;
+    padding: 10px 12px !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+/* Texte des liens par défaut (Écritures sombres bien visibles) */
+.fi-sidebar-item-label {
+    color: #334155 !important; /* Gris Ardoise foncé (Lisibilité maximale) */
+    font-weight: 600 !important;
+    font-size: 13px !important;
+}
+
+/* Icônes par défaut dans le menu : Bleu Royal éclatant */
+.fi-sidebar-item-button .fi-sidebar-item-icon {
+    color: #2563eb !important; /* Bleu de boutons principaux Bootstrap */
+    transition: all 0.2s ease !important;
+}
+
+/* --- EFFETS AU SURVOL (HOVER ACTION) --- */
+.fi-sidebar-item-button:hover {
+    background: #f1f5f9 !important; /* Fond gris très clair au survol */
+}
+
+.fi-sidebar-item-button:hover .fi-sidebar-item-label {
+    color: #1e3a8a !important; /* Le texte devient bleu marine */
+}
+
+.fi-sidebar-item-button:hover .fi-sidebar-item-icon {
+    color: #db2777 !important; /* L'icône flash en Rose Fuchsia vif au survol */
+    transform: scale(1.1) !important; /* Léger zoom dynamique */
+}
+
+/* --- ONGLER ACTIF (PAGE EN COURS D'UTILISATION) --- */
+.fi-sidebar-item-active .fi-sidebar-item-button {
+    background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%) !important; /* Dégradé Bleu Royal Éclatant */
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25) !important; /* Effet de relief bleu */
+}
+
+.fi-sidebar-item-active .fi-sidebar-item-label {
+    color: #ffffff !important; /* Le texte de la page active devient blanc pur */
+    font-weight: 700 !important;
+}
+
+.fi-sidebar-item-active .fi-sidebar-item-icon {
+    color: #ffffff !important; /* L'icône de la page active devient blanche */
+}
