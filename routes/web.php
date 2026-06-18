@@ -21,7 +21,7 @@ Route::get('/', function () {
 
 /*
 |--------------------------------------------------------------------------
-| 2. Authentification (Connexion)
+| 2. Authentification (Connexion / Déconnexion)
 |--------------------------------------------------------------------------
 */
 
@@ -52,22 +52,18 @@ Route::post('/connexion', function (Request $request) {
 
 /*
 |--------------------------------------------------------------------------
-| 3. Gestion de la Comptabilité & Reçus (Sécurisés par Auth)
+| 3. Zone Sécurisée : Gestion Administrative, Comptabilité & Reçus
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth'])->group(function () {
 
-    // Route de téléchargement depuis l'historique financier de PaymentResource
+    // 3.1 Téléchargement depuis l'historique financier de PaymentResource
     Route::get('/admin/payments/{record}/receipt', [PaymentReceiptController::class, 'download'])
         ->name('payment.receipt.download');
 
-    // Nouvelle route pour l'ouverture du reçu en plein écran (Bouton d'encaissement direct)
-   
-
-    // Nouvelle route pour l'ouverture du reçu en plein écran
+    // 3.2 Visualisation du reçu au format standard / PDF
     Route::get('/payments/{payment}/receipt', function (Payment $payment) {
-        // On charge la relation pour être sûr qu'elle ne soit pas nulle
-        // REMARQUE : Si votre relation s'appelle 'booking' et non 'eventBooking', écrivez 'booking' ci-dessous
+        // Chargement des relations pour éviter les valeurs nulles
         $payment->load('eventBooking.room.roomType');
 
         return view('pdf.receipt', [
@@ -75,5 +71,11 @@ Route::middleware(['auth'])->group(function () {
             'booking' => $payment->eventBooking ?? $payment->booking,
         ]);
     })->name('payments.receipt');
+
+    // 3.3 🔥 Impression Directe (Intercepte le clic du bouton d'impression Filament)
+    Route::get('/admin/receipt/{record}/print', function ($record) {
+        $recu = Payment::findOrFail($record);
+        return view('print.receipt', compact('recu'));
+    })->name('receipt.print');
 
 });

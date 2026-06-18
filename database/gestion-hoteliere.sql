@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1:3307
--- Généré le : jeu. 18 juin 2026 à 09:40
+-- Généré le : jeu. 18 juin 2026 à 14:01
 -- Version du serveur : 11.4.9-MariaDB
 -- Version de PHP : 8.3.28
 
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS `bookings` (
   PRIMARY KEY (`id`),
   KEY `bookings_room_id_foreign` (`room_id`),
   KEY `bookings_key_card_id_foreign` (`key_card_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `bookings`
@@ -79,7 +79,10 @@ INSERT INTO `bookings` (`id`, `room_id`, `key_card_id`, `key_card_assigned_at`, 
 (8, 2, NULL, NULL, NULL, 'Jean de Bonheur', '2026-06-17', '2026-06-20', 45000.00, '2026-06-17 11:52:51', '2026-06-17 11:52:51'),
 (9, 5, NULL, NULL, NULL, 'OUATT2', '2026-06-18', '2026-06-21', 105000.00, '2026-06-18 07:24:49', '2026-06-18 07:24:49'),
 (10, 6, NULL, NULL, NULL, 'FELIX001', '2026-06-18', '2026-06-20', 30000.00, '2026-06-18 07:59:03', '2026-06-18 07:59:03'),
-(11, 9, NULL, NULL, NULL, 'SEYDOU BAH', '2026-06-18', '2026-06-21', 60000.00, '2026-06-18 08:23:32', '2026-06-18 08:23:32');
+(11, 9, NULL, NULL, NULL, 'SEYDOU BAH', '2026-06-18', '2026-06-21', 60000.00, '2026-06-18 08:23:32', '2026-06-18 08:23:32'),
+(12, 9, NULL, NULL, NULL, 'Koné Nafata', '2026-06-18', '2026-06-21', 60000.00, '2026-06-18 10:05:40', '2026-06-18 10:05:40'),
+(13, 14, NULL, NULL, NULL, 'Yao Magloire', '2026-06-18', '2026-06-18', 15000.00, '2026-06-18 10:08:13', '2026-06-18 10:08:13'),
+(14, 3, NULL, NULL, NULL, 'BAT', '2026-06-18', '2026-06-23', 75000.00, '2026-06-18 12:52:08', '2026-06-18 12:52:08');
 
 -- --------------------------------------------------------
 
@@ -95,6 +98,15 @@ CREATE TABLE IF NOT EXISTS `cache` (
   PRIMARY KEY (`key`),
   KEY `cache_expiration_index` (`expiration`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Déchargement des données de la table `cache`
+--
+
+INSERT INTO `cache` (`key`, `value`, `expiration`) VALUES
+('laravel-cache-livewire-rate-limiter:16d36dff9abd246c67dfac3e63b993a169af77e6:timer', 'i:1781787414;', 1781787414),
+('laravel-cache-livewire-rate-limiter:16d36dff9abd246c67dfac3e63b993a169af77e6', 'i:1;', 1781787414),
+('laravel-cache-spatie.permission.cache', 'a:3:{s:5:\"alias\";a:4:{s:1:\"a\";s:2:\"id\";s:1:\"b\";s:4:\"name\";s:1:\"c\";s:10:\"guard_name\";s:1:\"r\";s:5:\"roles\";}s:11:\"permissions\";a:138:{i:0;a:4:{s:1:\"a\";i:1;s:1:\"b\";s:12:\"ViewAny:Role\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:1;a:4:{s:1:\"a\";i:2;s:1:\"b\";s:9:\"View:Role\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:2;a:4:{s:1:\"a\";i:3;s:1:\"b\";s:11:\"Create:Role\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:3;a:4:{s:1:\"a\";i:4;s:1:\"b\";s:11:\"Update:Role\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:4;a:4:{s:1:\"a\";i:5;s:1:\"b\";s:11:\"Delete:Role\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:5;a:4:{s:1:\"a\";i:6;s:1:\"b\";s:14:\"DeleteAny:Role\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:6;a:4:{s:1:\"a\";i:7;s:1:\"b\";s:12:\"Restore:Role\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:7;a:4:{s:1:\"a\";i:8;s:1:\"b\";s:16:\"ForceDelete:Role\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:8;a:4:{s:1:\"a\";i:9;s:1:\"b\";s:19:\"ForceDeleteAny:Role\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:9;a:4:{s:1:\"a\";i:10;s:1:\"b\";s:15:\"RestoreAny:Role\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:10;a:4:{s:1:\"a\";i:11;s:1:\"b\";s:14:\"Replicate:Role\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:11;a:4:{s:1:\"a\";i:12;s:1:\"b\";s:12:\"Reorder:Role\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:12;a:4:{s:1:\"a\";i:13;s:1:\"b\";s:15:\"ViewAny:Booking\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:13;a:4:{s:1:\"a\";i:14;s:1:\"b\";s:12:\"View:Booking\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:14;a:4:{s:1:\"a\";i:15;s:1:\"b\";s:14:\"Create:Booking\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:15;a:4:{s:1:\"a\";i:16;s:1:\"b\";s:14:\"Update:Booking\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:16;a:4:{s:1:\"a\";i:17;s:1:\"b\";s:14:\"Delete:Booking\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:17;a:4:{s:1:\"a\";i:18;s:1:\"b\";s:17:\"DeleteAny:Booking\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:18;a:4:{s:1:\"a\";i:19;s:1:\"b\";s:15:\"Restore:Booking\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:19;a:4:{s:1:\"a\";i:20;s:1:\"b\";s:19:\"ForceDelete:Booking\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:20;a:4:{s:1:\"a\";i:21;s:1:\"b\";s:22:\"ForceDeleteAny:Booking\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:21;a:4:{s:1:\"a\";i:22;s:1:\"b\";s:18:\"RestoreAny:Booking\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:22;a:4:{s:1:\"a\";i:23;s:1:\"b\";s:17:\"Replicate:Booking\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:23;a:4:{s:1:\"a\";i:24;s:1:\"b\";s:15:\"Reorder:Booking\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:24;a:4:{s:1:\"a\";i:25;s:1:\"b\";s:20:\"ViewAny:CateringItem\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:25;a:4:{s:1:\"a\";i:26;s:1:\"b\";s:17:\"View:CateringItem\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:26;a:4:{s:1:\"a\";i:27;s:1:\"b\";s:19:\"Create:CateringItem\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:27;a:4:{s:1:\"a\";i:28;s:1:\"b\";s:19:\"Update:CateringItem\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:28;a:4:{s:1:\"a\";i:29;s:1:\"b\";s:19:\"Delete:CateringItem\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:29;a:4:{s:1:\"a\";i:30;s:1:\"b\";s:22:\"DeleteAny:CateringItem\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:30;a:4:{s:1:\"a\";i:31;s:1:\"b\";s:20:\"Restore:CateringItem\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:31;a:4:{s:1:\"a\";i:32;s:1:\"b\";s:24:\"ForceDelete:CateringItem\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:32;a:4:{s:1:\"a\";i:33;s:1:\"b\";s:27:\"ForceDeleteAny:CateringItem\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:33;a:4:{s:1:\"a\";i:34;s:1:\"b\";s:23:\"RestoreAny:CateringItem\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:34;a:4:{s:1:\"a\";i:35;s:1:\"b\";s:22:\"Replicate:CateringItem\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:35;a:4:{s:1:\"a\";i:36;s:1:\"b\";s:20:\"Reorder:CateringItem\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:36;a:4:{s:1:\"a\";i:37;s:1:\"b\";s:21:\"ViewAny:CateringOrder\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:37;a:4:{s:1:\"a\";i:38;s:1:\"b\";s:18:\"View:CateringOrder\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:38;a:4:{s:1:\"a\";i:39;s:1:\"b\";s:20:\"Create:CateringOrder\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:39;a:4:{s:1:\"a\";i:40;s:1:\"b\";s:20:\"Update:CateringOrder\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:40;a:4:{s:1:\"a\";i:41;s:1:\"b\";s:20:\"Delete:CateringOrder\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:41;a:4:{s:1:\"a\";i:42;s:1:\"b\";s:23:\"DeleteAny:CateringOrder\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:42;a:4:{s:1:\"a\";i:43;s:1:\"b\";s:21:\"Restore:CateringOrder\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:43;a:4:{s:1:\"a\";i:44;s:1:\"b\";s:25:\"ForceDelete:CateringOrder\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:44;a:4:{s:1:\"a\";i:45;s:1:\"b\";s:28:\"ForceDeleteAny:CateringOrder\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:45;a:4:{s:1:\"a\";i:46;s:1:\"b\";s:24:\"RestoreAny:CateringOrder\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:46;a:4:{s:1:\"a\";i:47;s:1:\"b\";s:23:\"Replicate:CateringOrder\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:47;a:4:{s:1:\"a\";i:48;s:1:\"b\";s:21:\"Reorder:CateringOrder\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:48;a:4:{s:1:\"a\";i:49;s:1:\"b\";s:20:\"ViewAny:EventBooking\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:49;a:4:{s:1:\"a\";i:50;s:1:\"b\";s:17:\"View:EventBooking\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:50;a:4:{s:1:\"a\";i:51;s:1:\"b\";s:19:\"Create:EventBooking\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:51;a:4:{s:1:\"a\";i:52;s:1:\"b\";s:19:\"Update:EventBooking\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:52;a:4:{s:1:\"a\";i:53;s:1:\"b\";s:19:\"Delete:EventBooking\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:53;a:4:{s:1:\"a\";i:54;s:1:\"b\";s:22:\"DeleteAny:EventBooking\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:54;a:4:{s:1:\"a\";i:55;s:1:\"b\";s:20:\"Restore:EventBooking\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:55;a:4:{s:1:\"a\";i:56;s:1:\"b\";s:24:\"ForceDelete:EventBooking\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:56;a:4:{s:1:\"a\";i:57;s:1:\"b\";s:27:\"ForceDeleteAny:EventBooking\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:57;a:4:{s:1:\"a\";i:58;s:1:\"b\";s:23:\"RestoreAny:EventBooking\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:58;a:4:{s:1:\"a\";i:59;s:1:\"b\";s:22:\"Replicate:EventBooking\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:59;a:4:{s:1:\"a\";i:60;s:1:\"b\";s:20:\"Reorder:EventBooking\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:60;a:4:{s:1:\"a\";i:61;s:1:\"b\";s:18:\"ViewAny:EventSpace\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:61;a:4:{s:1:\"a\";i:62;s:1:\"b\";s:15:\"View:EventSpace\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:62;a:4:{s:1:\"a\";i:63;s:1:\"b\";s:17:\"Create:EventSpace\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:63;a:4:{s:1:\"a\";i:64;s:1:\"b\";s:17:\"Update:EventSpace\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:64;a:4:{s:1:\"a\";i:65;s:1:\"b\";s:17:\"Delete:EventSpace\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:65;a:4:{s:1:\"a\";i:66;s:1:\"b\";s:20:\"DeleteAny:EventSpace\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:66;a:4:{s:1:\"a\";i:67;s:1:\"b\";s:18:\"Restore:EventSpace\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:67;a:4:{s:1:\"a\";i:68;s:1:\"b\";s:22:\"ForceDelete:EventSpace\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:68;a:4:{s:1:\"a\";i:69;s:1:\"b\";s:25:\"ForceDeleteAny:EventSpace\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:69;a:4:{s:1:\"a\";i:70;s:1:\"b\";s:21:\"RestoreAny:EventSpace\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:70;a:4:{s:1:\"a\";i:71;s:1:\"b\";s:20:\"Replicate:EventSpace\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:71;a:4:{s:1:\"a\";i:72;s:1:\"b\";s:18:\"Reorder:EventSpace\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:72;a:4:{s:1:\"a\";i:73;s:1:\"b\";s:15:\"ViewAny:KeyCard\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:73;a:4:{s:1:\"a\";i:74;s:1:\"b\";s:12:\"View:KeyCard\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:74;a:4:{s:1:\"a\";i:75;s:1:\"b\";s:14:\"Create:KeyCard\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:75;a:4:{s:1:\"a\";i:76;s:1:\"b\";s:14:\"Update:KeyCard\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:76;a:4:{s:1:\"a\";i:77;s:1:\"b\";s:14:\"Delete:KeyCard\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:77;a:4:{s:1:\"a\";i:78;s:1:\"b\";s:17:\"DeleteAny:KeyCard\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:78;a:4:{s:1:\"a\";i:79;s:1:\"b\";s:15:\"Restore:KeyCard\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:79;a:4:{s:1:\"a\";i:80;s:1:\"b\";s:19:\"ForceDelete:KeyCard\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:80;a:4:{s:1:\"a\";i:81;s:1:\"b\";s:22:\"ForceDeleteAny:KeyCard\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:81;a:4:{s:1:\"a\";i:82;s:1:\"b\";s:18:\"RestoreAny:KeyCard\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:82;a:4:{s:1:\"a\";i:83;s:1:\"b\";s:17:\"Replicate:KeyCard\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:83;a:4:{s:1:\"a\";i:84;s:1:\"b\";s:15:\"Reorder:KeyCard\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:84;a:4:{s:1:\"a\";i:85;s:1:\"b\";s:15:\"ViewAny:Payment\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:85;a:4:{s:1:\"a\";i:86;s:1:\"b\";s:12:\"View:Payment\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:86;a:4:{s:1:\"a\";i:87;s:1:\"b\";s:14:\"Create:Payment\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:87;a:4:{s:1:\"a\";i:88;s:1:\"b\";s:14:\"Update:Payment\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:88;a:4:{s:1:\"a\";i:89;s:1:\"b\";s:14:\"Delete:Payment\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:89;a:4:{s:1:\"a\";i:90;s:1:\"b\";s:17:\"DeleteAny:Payment\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:90;a:4:{s:1:\"a\";i:91;s:1:\"b\";s:15:\"Restore:Payment\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:91;a:4:{s:1:\"a\";i:92;s:1:\"b\";s:19:\"ForceDelete:Payment\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:92;a:4:{s:1:\"a\";i:93;s:1:\"b\";s:22:\"ForceDeleteAny:Payment\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:93;a:4:{s:1:\"a\";i:94;s:1:\"b\";s:18:\"RestoreAny:Payment\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:94;a:4:{s:1:\"a\";i:95;s:1:\"b\";s:17:\"Replicate:Payment\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:95;a:4:{s:1:\"a\";i:96;s:1:\"b\";s:15:\"Reorder:Payment\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:96;a:4:{s:1:\"a\";i:97;s:1:\"b\";s:12:\"ViewAny:Room\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:97;a:4:{s:1:\"a\";i:98;s:1:\"b\";s:9:\"View:Room\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:98;a:4:{s:1:\"a\";i:99;s:1:\"b\";s:11:\"Create:Room\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:99;a:4:{s:1:\"a\";i:100;s:1:\"b\";s:11:\"Update:Room\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:100;a:4:{s:1:\"a\";i:101;s:1:\"b\";s:11:\"Delete:Room\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:101;a:4:{s:1:\"a\";i:102;s:1:\"b\";s:14:\"DeleteAny:Room\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:102;a:4:{s:1:\"a\";i:103;s:1:\"b\";s:12:\"Restore:Room\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:103;a:4:{s:1:\"a\";i:104;s:1:\"b\";s:16:\"ForceDelete:Room\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:104;a:4:{s:1:\"a\";i:105;s:1:\"b\";s:19:\"ForceDeleteAny:Room\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:105;a:4:{s:1:\"a\";i:106;s:1:\"b\";s:15:\"RestoreAny:Room\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:106;a:4:{s:1:\"a\";i:107;s:1:\"b\";s:14:\"Replicate:Room\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:107;a:4:{s:1:\"a\";i:108;s:1:\"b\";s:12:\"Reorder:Room\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:108;a:4:{s:1:\"a\";i:109;s:1:\"b\";s:16:\"ViewAny:RoomType\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:109;a:4:{s:1:\"a\";i:110;s:1:\"b\";s:13:\"View:RoomType\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:110;a:4:{s:1:\"a\";i:111;s:1:\"b\";s:15:\"Create:RoomType\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:111;a:4:{s:1:\"a\";i:112;s:1:\"b\";s:15:\"Update:RoomType\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:112;a:4:{s:1:\"a\";i:113;s:1:\"b\";s:15:\"Delete:RoomType\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:113;a:4:{s:1:\"a\";i:114;s:1:\"b\";s:18:\"DeleteAny:RoomType\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:114;a:4:{s:1:\"a\";i:115;s:1:\"b\";s:16:\"Restore:RoomType\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:115;a:4:{s:1:\"a\";i:116;s:1:\"b\";s:20:\"ForceDelete:RoomType\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:116;a:4:{s:1:\"a\";i:117;s:1:\"b\";s:23:\"ForceDeleteAny:RoomType\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:117;a:4:{s:1:\"a\";i:118;s:1:\"b\";s:19:\"RestoreAny:RoomType\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:118;a:4:{s:1:\"a\";i:119;s:1:\"b\";s:18:\"Replicate:RoomType\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:119;a:4:{s:1:\"a\";i:120;s:1:\"b\";s:16:\"Reorder:RoomType\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:120;a:4:{s:1:\"a\";i:121;s:1:\"b\";s:14:\"View:Dashboard\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:121;a:4:{s:1:\"a\";i:122;s:1:\"b\";s:13:\"View:Planning\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:122;a:4:{s:1:\"a\";i:123;s:1:\"b\";s:16:\"View:VueChambres\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:123;a:4:{s:1:\"a\";i:124;s:1:\"b\";s:24:\"View:PaymentMethodsChart\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:124;a:4:{s:1:\"a\";i:125;s:1:\"b\";s:17:\"View:RevenueChart\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:125;a:4:{s:1:\"a\";i:126;s:1:\"b\";s:18:\"View:StatsOverview\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:126;a:4:{s:1:\"a\";i:127;s:1:\"b\";s:12:\"ViewAny:User\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:127;a:4:{s:1:\"a\";i:128;s:1:\"b\";s:9:\"View:User\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:128;a:4:{s:1:\"a\";i:129;s:1:\"b\";s:11:\"Create:User\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:129;a:4:{s:1:\"a\";i:130;s:1:\"b\";s:11:\"Update:User\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:130;a:4:{s:1:\"a\";i:131;s:1:\"b\";s:11:\"Delete:User\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:131;a:4:{s:1:\"a\";i:132;s:1:\"b\";s:14:\"DeleteAny:User\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:132;a:4:{s:1:\"a\";i:133;s:1:\"b\";s:12:\"Restore:User\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:133;a:4:{s:1:\"a\";i:134;s:1:\"b\";s:16:\"ForceDelete:User\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:134;a:4:{s:1:\"a\";i:135;s:1:\"b\";s:19:\"ForceDeleteAny:User\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:135;a:4:{s:1:\"a\";i:136;s:1:\"b\";s:15:\"RestoreAny:User\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:136;a:4:{s:1:\"a\";i:137;s:1:\"b\";s:14:\"Replicate:User\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}i:137;a:4:{s:1:\"a\";i:138;s:1:\"b\";s:12:\"Reorder:User\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:1;}}}s:5:\"roles\";a:2:{i:0;a:3:{s:1:\"a\";i:1;s:1:\"b\";s:11:\"super_admin\";s:1:\"c\";s:3:\"web\";}i:1;a:3:{s:1:\"a\";i:2;s:1:\"b\";s:5:\"user1\";s:1:\"c\";s:3:\"web\";}}}', 1781873718);
 
 -- --------------------------------------------------------
 
@@ -435,7 +447,7 @@ CREATE TABLE IF NOT EXISTS `migrations` (
   `migration` varchar(191) NOT NULL,
   `batch` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `migrations`
@@ -460,7 +472,46 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (18, '2026_06_11_133540_add_housekeeping_status_to_rooms_table', 15),
 (19, '2026_06_11_134344_add_booking_id_to_catering_orders_table', 16),
 (20, '2026_06_11_150319_add_booking_options_to_event_bookings_table', 17),
-(21, '2026_06_14_152447_create_catering_orders_table', 18);
+(21, '2026_06_14_152447_create_catering_orders_table', 18),
+(22, '2026_06_18_114500_create_permission_tables', 19);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `model_has_permissions`
+--
+
+DROP TABLE IF EXISTS `model_has_permissions`;
+CREATE TABLE IF NOT EXISTS `model_has_permissions` (
+  `permission_id` bigint(20) UNSIGNED NOT NULL,
+  `model_type` varchar(191) NOT NULL,
+  `model_id` bigint(20) UNSIGNED NOT NULL,
+  PRIMARY KEY (`permission_id`,`model_id`,`model_type`),
+  KEY `model_has_permissions_model_id_model_type_index` (`model_id`,`model_type`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `model_has_roles`
+--
+
+DROP TABLE IF EXISTS `model_has_roles`;
+CREATE TABLE IF NOT EXISTS `model_has_roles` (
+  `role_id` bigint(20) UNSIGNED NOT NULL,
+  `model_type` varchar(191) NOT NULL,
+  `model_id` bigint(20) UNSIGNED NOT NULL,
+  PRIMARY KEY (`role_id`,`model_id`,`model_type`),
+  KEY `model_has_roles_model_id_model_type_index` (`model_id`,`model_type`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Déchargement des données de la table `model_has_roles`
+--
+
+INSERT INTO `model_has_roles` (`role_id`, `model_type`, `model_id`) VALUES
+(1, 'App\\Models\\User', 1),
+(2, 'App\\Models\\User', 2);
 
 -- --------------------------------------------------------
 
@@ -500,7 +551,7 @@ CREATE TABLE IF NOT EXISTS `payments` (
   UNIQUE KEY `payments_receipt_number_unique` (`receipt_number`),
   KEY `payments_event_booking_id_foreign` (`event_booking_id`),
   KEY `payments_user_id_foreign` (`user_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=107 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=112 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `payments`
@@ -576,7 +627,445 @@ INSERT INTO `payments` (`id`, `event_booking_id`, `payment_type`, `receipt_numbe
 (103, 11, 'chambre', 'REC-20260618-082340', 40000.00, 'wave', 'validé / encaissé', '2026-06-18 08:23:48', NULL, NULL, '2026-06-18 08:23:48', '2026-06-18 08:23:48'),
 (104, 11, 'chambre', 'REC-20260618-082734', 15000.00, 'cash', 'validé / encaissé', '2026-06-18 08:27:45', NULL, NULL, '2026-06-18 08:27:45', '2026-06-18 08:27:45'),
 (105, 11, 'chambre', 'REC-20260618-082913', 2000.00, 'cash', 'validé / encaissé', '2026-06-18 08:29:20', NULL, NULL, '2026-06-18 08:29:20', '2026-06-18 08:29:20'),
-(106, 11, 'chambre', 'REC-20260618-090534', 3000.00, 'cash', 'validé / encaissé', '2026-06-18 09:05:39', NULL, NULL, '2026-06-18 09:05:39', '2026-06-18 09:05:39');
+(106, 11, 'chambre', 'REC-20260618-090534', 3000.00, 'cash', 'validé / encaissé', '2026-06-18 09:05:39', NULL, NULL, '2026-06-18 09:05:39', '2026-06-18 09:05:39'),
+(107, 12, 'chambre', 'REC-20260618-100544', 40000.00, 'cash', 'validé / encaissé', '2026-06-18 10:05:54', NULL, NULL, '2026-06-18 10:05:54', '2026-06-18 10:05:54'),
+(108, 13, 'chambre', 'REC-20260618-100824', 10000.00, 'wave', 'validé / encaissé', '2026-06-18 10:08:31', NULL, NULL, '2026-06-18 10:08:31', '2026-06-18 10:08:31'),
+(109, 12, 'chambre', 'REC-20260618-111319', 20000.00, 'mtn_momo', 'validé / encaissé', '2026-06-18 11:13:27', NULL, NULL, '2026-06-18 11:13:27', '2026-06-18 11:13:27'),
+(110, 13, 'chambre', 'REC-20260618-111358', 5000.00, 'bank_transfer', 'validé / encaissé', '2026-06-18 11:14:03', NULL, NULL, '2026-06-18 11:14:03', '2026-06-18 11:14:03'),
+(111, 14, 'chambre', 'REC-20260618-125217', 50000.00, 'cash', 'validé / encaissé', '2026-06-18 12:52:28', NULL, NULL, '2026-06-18 12:52:28', '2026-06-18 12:52:28');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `permissions`
+--
+
+DROP TABLE IF EXISTS `permissions`;
+CREATE TABLE IF NOT EXISTS `permissions` (
+  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` varchar(125) NOT NULL,
+  `guard_name` varchar(125) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `permissions_name_guard_name_unique` (`name`,`guard_name`)
+) ENGINE=MyISAM AUTO_INCREMENT=139 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Déchargement des données de la table `permissions`
+--
+
+INSERT INTO `permissions` (`id`, `name`, `guard_name`, `created_at`, `updated_at`) VALUES
+(1, 'ViewAny:Role', 'web', '2026-06-18 11:47:35', '2026-06-18 11:47:35'),
+(2, 'View:Role', 'web', '2026-06-18 11:47:35', '2026-06-18 11:47:35'),
+(3, 'Create:Role', 'web', '2026-06-18 11:47:35', '2026-06-18 11:47:35'),
+(4, 'Update:Role', 'web', '2026-06-18 11:47:35', '2026-06-18 11:47:35'),
+(5, 'Delete:Role', 'web', '2026-06-18 11:47:35', '2026-06-18 11:47:35'),
+(6, 'DeleteAny:Role', 'web', '2026-06-18 11:47:35', '2026-06-18 11:47:35'),
+(7, 'Restore:Role', 'web', '2026-06-18 11:47:35', '2026-06-18 11:47:35'),
+(8, 'ForceDelete:Role', 'web', '2026-06-18 11:47:35', '2026-06-18 11:47:35'),
+(9, 'ForceDeleteAny:Role', 'web', '2026-06-18 11:47:35', '2026-06-18 11:47:35'),
+(10, 'RestoreAny:Role', 'web', '2026-06-18 11:47:35', '2026-06-18 11:47:35'),
+(11, 'Replicate:Role', 'web', '2026-06-18 11:47:35', '2026-06-18 11:47:35'),
+(12, 'Reorder:Role', 'web', '2026-06-18 11:47:35', '2026-06-18 11:47:35'),
+(13, 'ViewAny:Booking', 'web', '2026-06-18 11:53:06', '2026-06-18 11:53:06'),
+(14, 'View:Booking', 'web', '2026-06-18 11:53:06', '2026-06-18 11:53:06'),
+(15, 'Create:Booking', 'web', '2026-06-18 11:53:06', '2026-06-18 11:53:06'),
+(16, 'Update:Booking', 'web', '2026-06-18 11:53:06', '2026-06-18 11:53:06'),
+(17, 'Delete:Booking', 'web', '2026-06-18 11:53:06', '2026-06-18 11:53:06'),
+(18, 'DeleteAny:Booking', 'web', '2026-06-18 11:53:06', '2026-06-18 11:53:06'),
+(19, 'Restore:Booking', 'web', '2026-06-18 11:53:06', '2026-06-18 11:53:06'),
+(20, 'ForceDelete:Booking', 'web', '2026-06-18 11:53:06', '2026-06-18 11:53:06'),
+(21, 'ForceDeleteAny:Booking', 'web', '2026-06-18 11:53:06', '2026-06-18 11:53:06'),
+(22, 'RestoreAny:Booking', 'web', '2026-06-18 11:53:06', '2026-06-18 11:53:06'),
+(23, 'Replicate:Booking', 'web', '2026-06-18 11:53:06', '2026-06-18 11:53:06'),
+(24, 'Reorder:Booking', 'web', '2026-06-18 11:53:06', '2026-06-18 11:53:06'),
+(25, 'ViewAny:CateringItem', 'web', '2026-06-18 11:53:06', '2026-06-18 11:53:06'),
+(26, 'View:CateringItem', 'web', '2026-06-18 11:53:06', '2026-06-18 11:53:06'),
+(27, 'Create:CateringItem', 'web', '2026-06-18 11:53:06', '2026-06-18 11:53:06'),
+(28, 'Update:CateringItem', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(29, 'Delete:CateringItem', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(30, 'DeleteAny:CateringItem', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(31, 'Restore:CateringItem', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(32, 'ForceDelete:CateringItem', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(33, 'ForceDeleteAny:CateringItem', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(34, 'RestoreAny:CateringItem', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(35, 'Replicate:CateringItem', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(36, 'Reorder:CateringItem', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(37, 'ViewAny:CateringOrder', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(38, 'View:CateringOrder', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(39, 'Create:CateringOrder', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(40, 'Update:CateringOrder', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(41, 'Delete:CateringOrder', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(42, 'DeleteAny:CateringOrder', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(43, 'Restore:CateringOrder', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(44, 'ForceDelete:CateringOrder', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(45, 'ForceDeleteAny:CateringOrder', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(46, 'RestoreAny:CateringOrder', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(47, 'Replicate:CateringOrder', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(48, 'Reorder:CateringOrder', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(49, 'ViewAny:EventBooking', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(50, 'View:EventBooking', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(51, 'Create:EventBooking', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(52, 'Update:EventBooking', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(53, 'Delete:EventBooking', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(54, 'DeleteAny:EventBooking', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(55, 'Restore:EventBooking', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(56, 'ForceDelete:EventBooking', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(57, 'ForceDeleteAny:EventBooking', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(58, 'RestoreAny:EventBooking', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(59, 'Replicate:EventBooking', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(60, 'Reorder:EventBooking', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(61, 'ViewAny:EventSpace', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(62, 'View:EventSpace', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(63, 'Create:EventSpace', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(64, 'Update:EventSpace', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(65, 'Delete:EventSpace', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(66, 'DeleteAny:EventSpace', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(67, 'Restore:EventSpace', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(68, 'ForceDelete:EventSpace', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(69, 'ForceDeleteAny:EventSpace', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(70, 'RestoreAny:EventSpace', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(71, 'Replicate:EventSpace', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(72, 'Reorder:EventSpace', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(73, 'ViewAny:KeyCard', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(74, 'View:KeyCard', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(75, 'Create:KeyCard', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(76, 'Update:KeyCard', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(77, 'Delete:KeyCard', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(78, 'DeleteAny:KeyCard', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(79, 'Restore:KeyCard', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(80, 'ForceDelete:KeyCard', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(81, 'ForceDeleteAny:KeyCard', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(82, 'RestoreAny:KeyCard', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(83, 'Replicate:KeyCard', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(84, 'Reorder:KeyCard', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(85, 'ViewAny:Payment', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(86, 'View:Payment', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(87, 'Create:Payment', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(88, 'Update:Payment', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(89, 'Delete:Payment', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(90, 'DeleteAny:Payment', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(91, 'Restore:Payment', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(92, 'ForceDelete:Payment', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(93, 'ForceDeleteAny:Payment', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(94, 'RestoreAny:Payment', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(95, 'Replicate:Payment', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(96, 'Reorder:Payment', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(97, 'ViewAny:Room', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(98, 'View:Room', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(99, 'Create:Room', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(100, 'Update:Room', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(101, 'Delete:Room', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(102, 'DeleteAny:Room', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(103, 'Restore:Room', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(104, 'ForceDelete:Room', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(105, 'ForceDeleteAny:Room', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(106, 'RestoreAny:Room', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(107, 'Replicate:Room', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(108, 'Reorder:Room', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(109, 'ViewAny:RoomType', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(110, 'View:RoomType', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(111, 'Create:RoomType', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(112, 'Update:RoomType', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(113, 'Delete:RoomType', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(114, 'DeleteAny:RoomType', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(115, 'Restore:RoomType', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(116, 'ForceDelete:RoomType', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(117, 'ForceDeleteAny:RoomType', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(118, 'RestoreAny:RoomType', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(119, 'Replicate:RoomType', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(120, 'Reorder:RoomType', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(121, 'View:Dashboard', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(122, 'View:Planning', 'web', '2026-06-18 11:53:07', '2026-06-18 11:53:07'),
+(123, 'View:VueChambres', 'web', '2026-06-18 11:53:08', '2026-06-18 11:53:08'),
+(124, 'View:PaymentMethodsChart', 'web', '2026-06-18 11:53:08', '2026-06-18 11:53:08'),
+(125, 'View:RevenueChart', 'web', '2026-06-18 11:53:08', '2026-06-18 11:53:08'),
+(126, 'View:StatsOverview', 'web', '2026-06-18 11:53:08', '2026-06-18 11:53:08'),
+(127, 'ViewAny:User', 'web', '2026-06-18 12:28:16', '2026-06-18 12:28:16'),
+(128, 'View:User', 'web', '2026-06-18 12:28:16', '2026-06-18 12:28:16'),
+(129, 'Create:User', 'web', '2026-06-18 12:28:16', '2026-06-18 12:28:16'),
+(130, 'Update:User', 'web', '2026-06-18 12:28:16', '2026-06-18 12:28:16'),
+(131, 'Delete:User', 'web', '2026-06-18 12:28:16', '2026-06-18 12:28:16'),
+(132, 'DeleteAny:User', 'web', '2026-06-18 12:28:16', '2026-06-18 12:28:16'),
+(133, 'Restore:User', 'web', '2026-06-18 12:28:16', '2026-06-18 12:28:16'),
+(134, 'ForceDelete:User', 'web', '2026-06-18 12:28:16', '2026-06-18 12:28:16'),
+(135, 'ForceDeleteAny:User', 'web', '2026-06-18 12:28:16', '2026-06-18 12:28:16'),
+(136, 'RestoreAny:User', 'web', '2026-06-18 12:28:16', '2026-06-18 12:28:16'),
+(137, 'Replicate:User', 'web', '2026-06-18 12:28:16', '2026-06-18 12:28:16'),
+(138, 'Reorder:User', 'web', '2026-06-18 12:28:17', '2026-06-18 12:28:17');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `roles`
+--
+
+DROP TABLE IF EXISTS `roles`;
+CREATE TABLE IF NOT EXISTS `roles` (
+  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` varchar(125) NOT NULL,
+  `guard_name` varchar(125) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `roles_name_guard_name_unique` (`name`,`guard_name`)
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Déchargement des données de la table `roles`
+--
+
+INSERT INTO `roles` (`id`, `name`, `guard_name`, `created_at`, `updated_at`) VALUES
+(1, 'super_admin', 'web', '2026-06-18 11:47:35', '2026-06-18 11:47:35'),
+(2, 'user1', 'web', '2026-06-18 12:31:42', '2026-06-18 12:31:42');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `role_has_permissions`
+--
+
+DROP TABLE IF EXISTS `role_has_permissions`;
+CREATE TABLE IF NOT EXISTS `role_has_permissions` (
+  `permission_id` bigint(20) UNSIGNED NOT NULL,
+  `role_id` bigint(20) UNSIGNED NOT NULL,
+  PRIMARY KEY (`permission_id`,`role_id`),
+  KEY `role_has_permissions_role_id_foreign` (`role_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Déchargement des données de la table `role_has_permissions`
+--
+
+INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
+(1, 1),
+(2, 1),
+(3, 1),
+(4, 1),
+(5, 1),
+(6, 1),
+(7, 1),
+(8, 1),
+(9, 1),
+(10, 1),
+(11, 1),
+(12, 1),
+(13, 1),
+(13, 2),
+(14, 1),
+(14, 2),
+(15, 1),
+(15, 2),
+(16, 1),
+(16, 2),
+(17, 1),
+(17, 2),
+(18, 1),
+(18, 2),
+(19, 1),
+(19, 2),
+(20, 1),
+(21, 1),
+(21, 2),
+(22, 1),
+(22, 2),
+(23, 1),
+(23, 2),
+(24, 1),
+(24, 2),
+(25, 1),
+(25, 2),
+(26, 1),
+(26, 2),
+(27, 1),
+(27, 2),
+(28, 1),
+(28, 2),
+(29, 1),
+(29, 2),
+(30, 1),
+(30, 2),
+(31, 1),
+(31, 2),
+(32, 1),
+(33, 1),
+(33, 2),
+(34, 1),
+(34, 2),
+(35, 1),
+(35, 2),
+(36, 1),
+(36, 2),
+(37, 1),
+(37, 2),
+(38, 1),
+(38, 2),
+(39, 1),
+(39, 2),
+(40, 1),
+(40, 2),
+(41, 1),
+(41, 2),
+(42, 1),
+(42, 2),
+(43, 1),
+(43, 2),
+(44, 1),
+(45, 1),
+(45, 2),
+(46, 1),
+(46, 2),
+(47, 1),
+(47, 2),
+(48, 1),
+(48, 2),
+(49, 1),
+(49, 2),
+(50, 1),
+(50, 2),
+(51, 1),
+(51, 2),
+(52, 1),
+(52, 2),
+(53, 1),
+(53, 2),
+(54, 1),
+(54, 2),
+(55, 1),
+(55, 2),
+(56, 1),
+(57, 1),
+(57, 2),
+(58, 1),
+(58, 2),
+(59, 1),
+(59, 2),
+(60, 1),
+(60, 2),
+(61, 1),
+(61, 2),
+(62, 1),
+(62, 2),
+(63, 1),
+(63, 2),
+(64, 1),
+(64, 2),
+(65, 1),
+(65, 2),
+(66, 1),
+(66, 2),
+(67, 1),
+(67, 2),
+(68, 1),
+(69, 1),
+(69, 2),
+(70, 1),
+(70, 2),
+(71, 1),
+(71, 2),
+(72, 1),
+(72, 2),
+(73, 1),
+(74, 1),
+(75, 1),
+(76, 1),
+(77, 1),
+(78, 1),
+(79, 1),
+(80, 1),
+(81, 1),
+(82, 1),
+(83, 1),
+(84, 1),
+(85, 1),
+(85, 2),
+(86, 1),
+(86, 2),
+(87, 1),
+(87, 2),
+(88, 1),
+(88, 2),
+(89, 1),
+(89, 2),
+(90, 1),
+(90, 2),
+(91, 1),
+(91, 2),
+(92, 1),
+(92, 2),
+(93, 1),
+(93, 2),
+(94, 1),
+(94, 2),
+(95, 1),
+(95, 2),
+(96, 1),
+(96, 2),
+(97, 1),
+(97, 2),
+(98, 1),
+(98, 2),
+(99, 1),
+(99, 2),
+(100, 1),
+(100, 2),
+(101, 1),
+(101, 2),
+(102, 1),
+(102, 2),
+(103, 1),
+(103, 2),
+(104, 1),
+(105, 1),
+(105, 2),
+(106, 1),
+(106, 2),
+(107, 1),
+(107, 2),
+(108, 1),
+(108, 2),
+(109, 1),
+(109, 2),
+(110, 1),
+(110, 2),
+(111, 1),
+(111, 2),
+(112, 1),
+(112, 2),
+(113, 1),
+(113, 2),
+(114, 1),
+(114, 2),
+(115, 1),
+(115, 2),
+(116, 1),
+(117, 1),
+(117, 2),
+(118, 1),
+(118, 2),
+(119, 1),
+(119, 2),
+(120, 1),
+(120, 2),
+(121, 1),
+(122, 1),
+(123, 1),
+(124, 1),
+(125, 1),
+(126, 1),
+(127, 1),
+(128, 1),
+(129, 1),
+(130, 1),
+(131, 1),
+(132, 1),
+(133, 1),
+(134, 1),
+(135, 1),
+(136, 1),
+(137, 1),
+(138, 1);
 
 -- --------------------------------------------------------
 
@@ -605,7 +1094,7 @@ CREATE TABLE IF NOT EXISTS `rooms` (
 INSERT INTO `rooms` (`id`, `room_type_id`, `number`, `status`, `created_at`, `updated_at`, `housekeeping_status`) VALUES
 (1, 4, '21', 'disponible', '2026-06-08 13:21:15', '2026-06-17 11:35:39', 'en_cours'),
 (2, 4, '22', 'occupee', '2026-06-08 13:21:29', '2026-06-09 17:06:38', 'propre'),
-(3, 4, '23', 'menage', '2026-06-08 13:21:41', '2026-06-11 09:18:20', 'propre'),
+(3, 4, '23', 'occupee', '2026-06-08 13:21:41', '2026-06-18 12:52:08', 'propre'),
 (4, 4, '24', 'disponible', '2026-06-08 13:21:51', '2026-06-08 13:21:51', 'propre'),
 (5, 1, '25', 'occupee', '2026-06-08 13:21:59', '2026-06-18 07:24:49', 'propre'),
 (6, 3, '26', 'occupee', '2026-06-08 13:22:24', '2026-06-18 07:59:03', 'propre'),
@@ -616,7 +1105,7 @@ INSERT INTO `rooms` (`id`, `room_type_id`, `number`, `status`, `created_at`, `up
 (11, 1, '31', 'disponible', '2026-06-08 13:23:09', '2026-06-08 13:23:09', 'propre'),
 (12, 5, '32', 'disponible', '2026-06-09 16:38:59', '2026-06-09 16:38:59', 'propre'),
 (13, 5, '33', 'occupee', '2026-06-09 16:39:07', '2026-06-09 17:06:06', 'propre'),
-(14, 5, '34', 'disponible', '2026-06-09 16:39:17', '2026-06-09 16:39:17', 'propre'),
+(14, 5, '34', 'occupee', '2026-06-09 16:39:17', '2026-06-18 10:08:13', 'propre'),
 (15, 5, '35', 'occupee', '2026-06-09 16:39:26', '2026-06-11 08:11:59', 'propre');
 
 -- --------------------------------------------------------
@@ -700,14 +1189,15 @@ CREATE TABLE IF NOT EXISTS `users` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `users_email_unique` (`email`)
-) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `users`
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`) VALUES
-(1, 'Admin', 'coulsie@gmail.com', NULL, '$2y$12$yeTcnk5PNKO.tqWPd4Vikeer/Dxcf3EAQO5ceVVszUB4CXnWqvZCe', 'NOOkIrzVcUO3xxrYsxV8s92soUj5BY2uCxv2miOOc6bMYbbneeU1yc54X2nl', '2026-06-08 11:39:21', '2026-06-08 11:45:00');
+(1, 'Admin', 'coulsie@gmail.com', NULL, '$2y$12$yeTcnk5PNKO.tqWPd4Vikeer/Dxcf3EAQO5ceVVszUB4CXnWqvZCe', 'qtW1xibIqFrGFUYzqrDX4MT3lGMdSMdEs72c79SBlhgxPBIKaz3SahFNN1cy', '2026-06-08 11:39:21', '2026-06-08 11:45:00'),
+(2, 'Koné Nafata', 'nafie410@gmail.com', NULL, '$2y$12$mmlRf58/BS8NH5iWok0uSeRt2ZtgrhZX7v6ljuNJCSqD8shwXGSBe', NULL, '2026-06-18 12:31:57', '2026-06-18 12:31:57');
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

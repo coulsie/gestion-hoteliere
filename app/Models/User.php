@@ -9,26 +9,26 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles; // 🔥 1. IMPORTATION DU SYSTEME DE ROLES
 
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    // 🔥 2. ACTIVATION DU TRAIT HASROLES À CÔTÉ DES AUTRES TRAITS
+    use HasFactory, Notifiable, HasRoles;
 
     /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
      */
-   
-        protected function casts(): array
+    protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed', // <-- CETTE LIGNE EST INDISPENSABLE
+            'password' => 'hashed',
         ];
     }
-
 }

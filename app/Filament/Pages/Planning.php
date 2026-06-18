@@ -7,15 +7,21 @@ use App\Models\Booking;
 use App\Models\Room;
 use Illuminate\Support\Carbon;
 use BackedEnum;
+use UnitEnum;
+use Filament\Support\Icons\Heroicon; // 🔥 IMPORTATION DE L'ICÔNE EN IMAGE
+use BezhanSalleh\FilamentShield\Traits\HasPageShield; // 🔥 IMPORTATION DE LA SÉCURITÉ SHIELD
 
 class Planning extends Page
 {
-    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-calendar-days';
+    use HasPageShield; // 🔥 ACTIVE LE CONTRÔLE DES ACCÈS PAR RÔLE SUR CETTE PAGE
+
+    // 🔥 CORRECTIF VISUEL : Utilisation de l'objet Heroicon natif pour afficher l'image colorée
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendarDays;
+
     protected static ?string $navigationLabel = 'Planning des Occupations';
-    protected static string|\UnitEnum|null $navigationGroup = 'Gestion Hôtelière';
+    protected static string|UnitEnum|null $navigationGroup = 'Gestion Hôtelière';
     protected static ?string $title = 'Planning & Grille d\'Occupation';
 
-    // FIX : On enlève le mot-clé "static" qui provoquait le plantage
     protected string $view = 'filament.pages.planning';
 
     public array $joursDuMois = [];

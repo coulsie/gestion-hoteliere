@@ -73,6 +73,12 @@
         table { width: 100%; border-collapse: collapse; margin-top: 25px; font-size: 13px; }
         th { text-align: left; padding: 8px; background: #f8f9fa; border-bottom: 2px solid #dee2e6; }
         td { padding: 8px; border-bottom: 1px solid #eee; }
+
+        /* Masquage intelligent du bouton d'assistance sur la version papier imprimée */
+        @media print {
+            .no-print { display: none !important; }
+            body { padding: 0; margin: 0; }
+        }
     </style>
 </head>
 <body>
@@ -179,13 +185,44 @@
                 <span style="font-weight:bold;">{{ number_format($totalDejaPayeEnBdd, 0, ',', ' ') }} FCFA</span>
             </div>
             <div style="display:flex; justify-content:space-between; margin-top:10px; padding:8px 0; border-top:2px solid #333; font-size:16px; font-weight:bold; color:{{ $resteAPayer > 0 ? '#fd7e14' : '#198754' }};">
+            {{-- Libellé et Montant du Reste à Payer --}}
+            <div style="display: flex; justify-content: space-between; margin-top: 10px; padding: 8px 0; border-top: 2px solid #333; font-size: 16px; font-weight: bold; color: {{ $resteAPayer > 0 ? '#fd7e14' : '#198754' }};">
                 <span>{{ $resteAPayer > 0 ? 'Reste à payer (Solde dû) :' : 'État de la facture :' }}</span>
                 <span>{{ $resteAPayer > 0 ? number_format($resteAPayer, 0, ',', ' ') . ' FCFA' : 'ENTIÈREMENT SOLDÉE' }}</span>
             </div>
         @endif
     </div>
 
-    <div style="clear:both;"></div>
+    {{-- Nettoyage des alignements flottants --}}
+    <div style="clear: both;"></div>
+
+    {{-- ZONE DE SIGNATURES COMPTABLES --}}
+    <div style="display: flex; justify-content: space-between; margin-top: 50px; font-size: 12px; text-align: center;">
+        <div>
+            <p style="margin-bottom: 60px; color: #555; font-weight: bold; text-transform: uppercase;">Signature du Client</p>
+            <hr style="width: 160px; border: 0; border-top: 1px dashed #bbb;">
+        </div>
+        <div>
+            <p style="margin-bottom: 60px; color: #555; font-weight: bold; text-transform: uppercase;">Le Caissier / La Réception</p>
+            <hr style="width: 160px; border: 0; border-top: 1px dashed #bbb;">
+        </div>
+    </div>
+
+    {{-- BOUTON DE RELANCE (Visible uniquement à l'écran, masqué à l'impression) --}}
+    <div class="no-print" style="margin-top: 60px; text-align: center;">
+        <button onclick="window.print();" style="padding: 12px 24px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.08);">
+            🖨️ Relancer l'Impression Matérielle
+        </button>
+    </div>
+
+    {{-- INTERCEPTOR JAVASCRIPT : Déclenchement automatique des pilotes d'impression --}}
+    <script>
+        window.onload = function() {
+            setTimeout(function() {
+                window.print();
+            }, 300);
+        }
+    </script>
+
 </body>
 </html>
-
