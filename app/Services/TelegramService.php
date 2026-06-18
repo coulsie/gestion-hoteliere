@@ -12,15 +12,13 @@ class TelegramService
      */
     public static function envoyerNotification(string $message): bool
     {
-        // Nettoyage complet des jetons d'authentification et ID de discussion
         $botToken = "AAG3OqyXMWCMN3x1EDj48sZJjySBgZZLSck";
         $chatId = "7598516084";
 
         try {
-            // FIX URL DIRECTE : Utilisation de la véritable structure d'URL de l'API avec le mot 'bot' collé au Token
+            // FIX ULTIME URL TELEGRAM : Ajout de api. et du préfixe bot obligatoire avant la clé
             $url = "https://telegram.org{$botToken}/sendMessage";
 
-            // FIX LOCALHOST : withoutVerifying() détruit le blocage SSL cURL 60 de WampServer
             $response = Http::withoutVerifying()->post($url, [
                 'chat_id'    => $chatId,
                 'text'       => $message,
@@ -66,18 +64,11 @@ class TelegramService
         $message .= "📄 <b>N° Reçu</b> : <code>{$numRecu}</code>\n\n";
         $message .= "🕒 " . now()->format('d/m/Y H:i:s');
 
-        // Nettoyage des balises pour les canaux en texte brut (WhatsApp & SMS)
         $messageSansHtml = strip_tags($message);
 
-        // 🚀 MULTI-DIFFUSION SIMULTANÉE SUR LES TROIS CANAUX DE TÉLÉPHONIE
-
-        // 1. Expédition vers Telegram (Gère l'affichage en gras HTML)
+        // Multi-diffusion linéaire et propre simultanée
         static::envoyerNotification($message);
-
-        // 2. Expédition vers WhatsApp (Twilio basic auth)
         \App\Services\WhatsAppService::envoyerWhatsApp($messageSansHtml);
-
-        // 3. Expédition par SMS classique cellulaire
         \App\Services\SmsService::envoyerSms($messageSansHtml);
     }
 }

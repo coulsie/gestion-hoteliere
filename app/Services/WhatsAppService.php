@@ -12,19 +12,16 @@ class WhatsAppService
      */
     public static function envoyerWhatsApp(string $message): bool
     {
-        // 1. VOS CLÉS SECRÈTES TWILIO (À remplacer par vos accès Twilio réels)
-        $sid = env('TWILIO_ACCOUNT_SID');
-        $token = env('TWILIO_AUTH_TOKEN');
-        $numeroTwilio = "whatsapp:+14155238886"; // Le numéro sandbox fourni par Twilio
+        $sid = env('TWILIO_ACCOUNT_SID', 'AC300ed63a9eb812f13b0d205856bdd686');
+        $token = env('TWILIO_AUTH_TOKEN', 'af5d195314a993bccb66ba0786f24876');
+        $numeroTwilio = env('TWILIO_NUMBER', 'whatsapp:+14155238886');
 
-        // FIX SÉCURITÉ : Lecture du .env avec votre numéro réel +2250584365858 en valeur de secours par défaut
         $numeroProprietaire = "whatsapp:" . env('PROPRIETAIRE_WHATSAPP', '+2250584365858');
 
         try {
-            // FIX URL DIRECTE : Utilisation de l'adresse API officielle et complète de Twilio pour WhatsApp
+            // FIX NETTOYAGE ABSOLU URL STRICTE DE PRODUCTION TWILIO WHATSAPP
             $url = "https://twilio.com{$sid}/Messages.json";
 
-            // FIX LOCALHOST : withoutVerifying() détruit le blocage SSL cURL 60 de WampServer
             $response = Http::withoutVerifying()
                 ->withBasicAuth($sid, $token)
                 ->asForm()
@@ -34,7 +31,12 @@ class WhatsAppService
                     'Body' => $message,
                 ]);
 
-            return $response->successful();
+            if ($response->successful()) {
+                return true;
+            }
+
+            Log::error("Échec Twilio WhatsApp API - Code: " . $response->status() . " - " . $response->body());
+            return false;
         } catch (\Exception $e) {
             Log::error("Erreur envoi WhatsApp Twilio : " . $e->getMessage());
             return false;
