@@ -2,48 +2,74 @@
 
 namespace App\Filament\Widgets;
 
-use Filament\Widgets\StatsOverviewWidget;
+use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth; // 🔥 Ajouté pour récupérer l'admin connecté
+use App\Models\Payment;
+use App\Models\Room;
 
-class StatsOverview extends StatsOverviewWidget
+class StatsOverview extends BaseWidget
 {
-        protected function getStats(): array
+    protected static ?int $sort = 2;
+
+    protected int | string | array $columnSpan = 'full';
+
+    protected function getStats(): array
     {
-        // 1. FIX ABSOLU : Calcul de la Recette Journalière brute (Paiements du jour)
-        $recetteDuJour = \App\Models\Payment::whereIn('status', ['completed', 'validé / encaissé'])
-            ->whereDate('created_at', \Illuminate\Support\Carbon::today())
+        $aujourdhui = Carbon::today();
+
+        // 🔥 Récupération dynamique du prénom ou nom de l'administrateur connecté
+        $adminNom = Auth::user()?->name ?? 'Administrateur';
+
+        // 1. Somme des paiements
+        $recetteDuJour = (float) Payment::whereIn('status', ['completed', 'validé / encaissé'])
+            ->whereDate('paid_at', $aujourdhui)
             ->sum('amount');
 
-        // 2. FIX ABSOLU : Calcul du Taux d'Occupation
-        $totalChambres = max(1, \App\Models\Room::count());
-        $chambresOccupees = \App\Models\Room::where('housekeeping_status', 'sale')
-            ->orWhereHas('bookings', function ($query) {
-                $query->where('check_in', '<=', \Illuminate\Support\Carbon::now())
-                    ->where('check_out', '>=', \Illuminate\Support\Carbon::now());
-            })->count();
+        // 2. Calcul du Taux d'Occupation
+        $totalChambres = Room::count() ?: 1;
 
-        $tauxOccupation = round(($chambresOccupees / $totalChambres) * 100);
+        $chambresOccupees = Room::where('housekeeping_status', 'sale')
+            ->orWhereHas('bookings', function ($query) use ($aujourdhui) {
+                $query->whereDate('check_in', '<=', $aujourdhui)
+                      ->whereDate('check_out', '>=', $aujourdhui);
+            })
+            ->count();
 
-        // 3. FIX ABSOLU : Chambres nécessitant une action (Ménage)
-        $chambresSales = \App\Models\Room::where('housekeeping_status', 'sale')->count();
+        $tauxOccupation = (int) round(($chambresOccupees / $totalChambres) * 100);
+
+        // 3. Alertes Ménage
+        $chambresSales = Room::where('housekeeping_status', 'sale')->count();
+
+        $chartRecette = $recetteDuJour > 0 ? [$recetteDuJour * 0.3, $recetteDuJour * 0.7, $recetteDuJour * 0.5, $recetteDuJour] : [];
+        $chartMenage = $chambresSales > 0 ? [$chambresSales * 1.5, $chambresSales * 0.5, $chambresSales] : [];
 
         return [
-            \Filament\Widgets\StatsOverviewWidget\Stat::make('💰 Recette du Jour', number_format($recetteDuJour, 0, '.', ' ') . ' FCFA')
-                ->description('Cumul des encaissements aujourd\'hui')
+            // BLOC 1 : FINANCES + MESSAGE DE BIENVENUE INTÉGRÉ
+            Stat::make("👋 Bonjour, {$adminNom} !", number_format($recetteDuJour, 0, '.', ' ') . ' FCFA')
+                ->description("Recette du jour encaissée aujourd'hui")
                 ->descriptionIcon('heroicon-m-arrow-trending-up')
+                ->chart($chartRecette)
                 ->color('success'),
 
-            \Filament\Widgets\StatsOverviewWidget\Stat::make('🏨 Taux d\'Occupation', $tauxOccupation . ' %')
-                ->description("{$chambresOccupees} chambre(s) occupée(s) sur {$totalChambres}")
-                ->descriptionIcon('heroicon-m-user-group')
-                ->color($tauxOccupation > 50 ? 'success' : 'warning'),
+            // BLOC 2 : TAUX D'OCCUPATION
+            Stat::make('🏨 Taux d\'Occupation', "{$tauxOccupation} %")
+                ->description("{$chambresOccupees} occupée(s) / {$totalChambres} disponibles")
+                ->descriptionIcon('heroicon-m-building-office-2')
+                ->chart([10, 30, 45, $tauxOccupation])
+                ->color(match(true) {
+                    $tauxOccupation >= 70 => 'success',
+                    $tauxOccupation >= 30 => 'warning',
+                    default => 'info'
+                }),
 
-            \Filament\Widgets\StatsOverviewWidget\Stat::make('🧹 Alertes Ménage', $chambresSales . ' Chambre(s)')
-                ->description('Nombre d\'hébergements marqués SALE')
-                ->descriptionIcon('heroicon-m-sparkles')
+            // BLOC 3 : ALERTE LOGISTIQUE
+            Stat::make('🧼 État du Ménage', "{$chambresSales} Chambre(s) Sale(s)")
+                ->description($chambresSales > 0 ? 'Action requise par le personnel' : 'Toutes les chambres sont prêtes')
+                ->descriptionIcon($chambresSales > 0 ? 'heroicon-m-exclamation-triangle' : 'heroicon-m-check-circle')
+                ->chart($chartMenage)
                 ->color($chambresSales > 0 ? 'danger' : 'success'),
         ];
     }
-
-
 }

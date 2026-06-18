@@ -38,7 +38,7 @@
                                         {{ $type->name }}
                                     </div>
                                     <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                        {{ number_format($type->base_price, 2, ',', ' ') }} € / Nuit
+                                        {{ number_format($type->base_price, 2, ',', ' ') }} FCFA / Nuit
                                     </div>
                                     <p class="text-muted small mt-2">Profitez de notre service d'étage de qualité hôtelière et d'un confort optimal.</p>
                                 </div>

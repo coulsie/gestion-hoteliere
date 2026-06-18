@@ -6,12 +6,11 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages\Dashboard;
+use App\Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Widgets\AccountWidget;
-use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -36,10 +35,18 @@ class AdminPanelProvider extends PanelProvider
             ->pages([
                 Dashboard::class,
             ])
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
+            // 💡 SOLUTION RADICALE : On commente la découverte automatique pour éviter les doublons ou désordres
+            // ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
+
+            // 🔥 FLUX DE RENDU FORCÉ : Injection ordonnée pour remplir la grille de gauche à droite
             ->widgets([
-                AccountWidget::class,
-                FilamentInfoWidget::class,
+                // 🔥 FLUX DE RENDU FORCÉ : Injection ordonnée pour remplir la grille de gauche à droite
+           
+                // 💡 TEST : On commente temporairement le message de bienvenue pour libérer la ligne du haut
+                // AccountWidget::class,                                 // Ligne 0 : Message Bienvenue (Full)
+                \App\Filament\Widgets\PaymentMethodsChart::class,   // Ligne 1 - Gauche : Camembert (Span 1)
+                \App\Filament\Widgets\RevenueChart::class,          // Ligne 1 - Droite : Évolution (Span 1)
+                \App\Filament\Widgets\StatsOverview::class,         // Ligne 2 : Blocs Tricolores (Full)
             ])
             ->middleware([
                 EncryptCookies::class,

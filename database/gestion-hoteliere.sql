@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1:3307
--- Généré le : mer. 17 juin 2026 à 15:51
+-- Généré le : jeu. 18 juin 2026 à 09:40
 -- Version du serveur : 11.4.9-MariaDB
 -- Version de PHP : 8.3.28
 
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS `bookings` (
   PRIMARY KEY (`id`),
   KEY `bookings_room_id_foreign` (`room_id`),
   KEY `bookings_key_card_id_foreign` (`key_card_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `bookings`
@@ -76,7 +76,10 @@ INSERT INTO `bookings` (`id`, `room_id`, `key_card_id`, `key_card_assigned_at`, 
 (5, 15, NULL, NULL, NULL, 'OUATT1', '2026-06-11', '2026-06-11', 15000.00, '2026-06-11 08:11:59', '2026-06-11 08:11:59'),
 (6, 15, NULL, NULL, NULL, 'KOUAME Seraphin', '2026-06-15', '2026-06-15', 20000.00, '2026-06-15 10:53:32', '2026-06-15 10:53:32'),
 (7, 15, NULL, NULL, NULL, 'Jean de Bonheur', '2026-06-17', '2026-06-17', 20000.00, '2026-06-17 09:16:47', '2026-06-17 09:16:47'),
-(8, 2, NULL, NULL, NULL, 'Jean de Bonheur', '2026-06-17', '2026-06-20', 45000.00, '2026-06-17 11:52:51', '2026-06-17 11:52:51');
+(8, 2, NULL, NULL, NULL, 'Jean de Bonheur', '2026-06-17', '2026-06-20', 45000.00, '2026-06-17 11:52:51', '2026-06-17 11:52:51'),
+(9, 5, NULL, NULL, NULL, 'OUATT2', '2026-06-18', '2026-06-21', 105000.00, '2026-06-18 07:24:49', '2026-06-18 07:24:49'),
+(10, 6, NULL, NULL, NULL, 'FELIX001', '2026-06-18', '2026-06-20', 30000.00, '2026-06-18 07:59:03', '2026-06-18 07:59:03'),
+(11, 9, NULL, NULL, NULL, 'SEYDOU BAH', '2026-06-18', '2026-06-21', 60000.00, '2026-06-18 08:23:32', '2026-06-18 08:23:32');
 
 -- --------------------------------------------------------
 
@@ -497,7 +500,7 @@ CREATE TABLE IF NOT EXISTS `payments` (
   UNIQUE KEY `payments_receipt_number_unique` (`receipt_number`),
   KEY `payments_event_booking_id_foreign` (`event_booking_id`),
   KEY `payments_user_id_foreign` (`user_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=94 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=107 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `payments`
@@ -560,7 +563,20 @@ INSERT INTO `payments` (`id`, `event_booking_id`, `payment_type`, `receipt_numbe
 (90, NULL, 'chambre', 'REC-RESTO-20260617-152745', 40000.00, 'cash', 'validé / encaissé', '2026-06-17 15:27:45', NULL, NULL, '2026-06-17 15:27:45', '2026-06-17 15:27:45'),
 (91, NULL, 'chambre', 'REC-RESTO-20260617-152919', 40000.00, 'wave', 'validé / encaissé', '2026-06-17 15:29:19', NULL, NULL, '2026-06-17 15:29:19', '2026-06-17 15:29:19'),
 (92, NULL, 'chambre', 'REC-RESTO-20260617-153104', 40000.00, 'orange_money', 'validé / encaissé', '2026-06-17 15:31:04', NULL, NULL, '2026-06-17 15:31:04', '2026-06-17 15:31:04'),
-(93, NULL, 'chambre', 'REC-RESTO-20260617-154954', 92500.00, 'cash', 'validé / encaissé', '2026-06-17 15:49:54', NULL, NULL, '2026-06-17 15:49:54', '2026-06-17 15:49:54');
+(93, NULL, 'chambre', 'REC-RESTO-20260617-154954', 92500.00, 'cash', 'validé / encaissé', '2026-06-17 15:49:54', NULL, NULL, '2026-06-17 15:49:54', '2026-06-17 15:49:54'),
+(94, 9, 'chambre', 'REC-20260618-072503', 85000.00, 'cash', 'validé / encaissé', '2026-06-18 07:25:13', NULL, NULL, '2026-06-18 07:25:13', '2026-06-18 07:25:13'),
+(95, 9, 'chambre', 'REC-20260618-073233', 15000.00, 'wave', 'validé / encaissé', '2026-06-18 07:32:41', NULL, NULL, '2026-06-18 07:32:41', '2026-06-18 07:32:41'),
+(96, 9, 'chambre', 'REC-20260618-073916', 3000.00, 'wave', 'validé / encaissé', '2026-06-18 07:39:24', NULL, NULL, '2026-06-18 07:39:24', '2026-06-18 07:39:24'),
+(97, 9, 'chambre', 'REC-20260618-074331', 1000.00, 'wave', 'validé / encaissé', '2026-06-18 07:43:38', NULL, NULL, '2026-06-18 07:43:38', '2026-06-18 07:43:38'),
+(98, 9, 'chambre', 'REC-20260618-075656', 1000.00, 'cash', 'validé / encaissé', '2026-06-18 07:57:02', NULL, NULL, '2026-06-18 07:57:02', '2026-06-18 07:57:02'),
+(99, 10, 'chambre', 'REC-20260618-075907', 17000.00, 'cash', 'validé / encaissé', '2026-06-18 07:59:17', NULL, NULL, '2026-06-18 07:59:17', '2026-06-18 07:59:17'),
+(100, 10, 'chambre', 'REC-20260618-080349', 8000.00, 'cash', 'validé / encaissé', '2026-06-18 08:03:59', NULL, NULL, '2026-06-18 08:03:59', '2026-06-18 08:03:59'),
+(101, 10, 'chambre', 'REC-20260618-080901', 3000.00, 'wave', 'validé / encaissé', '2026-06-18 08:09:09', NULL, NULL, '2026-06-18 08:09:09', '2026-06-18 08:09:09'),
+(102, 10, 'chambre', 'REC-20260618-082051', 2000.00, 'cash', 'validé / encaissé', '2026-06-18 08:20:58', NULL, NULL, '2026-06-18 08:20:58', '2026-06-18 08:20:58'),
+(103, 11, 'chambre', 'REC-20260618-082340', 40000.00, 'wave', 'validé / encaissé', '2026-06-18 08:23:48', NULL, NULL, '2026-06-18 08:23:48', '2026-06-18 08:23:48'),
+(104, 11, 'chambre', 'REC-20260618-082734', 15000.00, 'cash', 'validé / encaissé', '2026-06-18 08:27:45', NULL, NULL, '2026-06-18 08:27:45', '2026-06-18 08:27:45'),
+(105, 11, 'chambre', 'REC-20260618-082913', 2000.00, 'cash', 'validé / encaissé', '2026-06-18 08:29:20', NULL, NULL, '2026-06-18 08:29:20', '2026-06-18 08:29:20'),
+(106, 11, 'chambre', 'REC-20260618-090534', 3000.00, 'cash', 'validé / encaissé', '2026-06-18 09:05:39', NULL, NULL, '2026-06-18 09:05:39', '2026-06-18 09:05:39');
 
 -- --------------------------------------------------------
 
@@ -591,11 +607,11 @@ INSERT INTO `rooms` (`id`, `room_type_id`, `number`, `status`, `created_at`, `up
 (2, 4, '22', 'occupee', '2026-06-08 13:21:29', '2026-06-09 17:06:38', 'propre'),
 (3, 4, '23', 'menage', '2026-06-08 13:21:41', '2026-06-11 09:18:20', 'propre'),
 (4, 4, '24', 'disponible', '2026-06-08 13:21:51', '2026-06-08 13:21:51', 'propre'),
-(5, 1, '25', 'disponible', '2026-06-08 13:21:59', '2026-06-08 13:21:59', 'propre'),
-(6, 3, '26', 'menage', '2026-06-08 13:22:24', '2026-06-11 09:18:20', 'propre'),
+(5, 1, '25', 'occupee', '2026-06-08 13:21:59', '2026-06-18 07:24:49', 'propre'),
+(6, 3, '26', 'occupee', '2026-06-08 13:22:24', '2026-06-18 07:59:03', 'propre'),
 (7, 2, '27', 'disponible', '2026-06-08 13:22:32', '2026-06-08 13:22:32', 'propre'),
 (8, 2, '28', 'disponible', '2026-06-08 13:22:40', '2026-06-08 13:22:40', 'propre'),
-(9, 2, '29', 'disponible', '2026-06-08 13:22:48', '2026-06-08 13:22:48', 'propre'),
+(9, 2, '29', 'occupee', '2026-06-08 13:22:48', '2026-06-18 08:23:32', 'propre'),
 (10, 2, '30', 'disponible', '2026-06-08 13:23:00', '2026-06-08 13:23:00', 'propre'),
 (11, 1, '31', 'disponible', '2026-06-08 13:23:09', '2026-06-08 13:23:09', 'propre'),
 (12, 5, '32', 'disponible', '2026-06-09 16:38:59', '2026-06-09 16:38:59', 'propre'),
