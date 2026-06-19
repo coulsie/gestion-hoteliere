@@ -3,11 +3,12 @@
 namespace App\Filament\Resources\PaymentResource\Tables;
 
 use Filament\Tables\Table;
-use Filament\Actions\Action; // 🔥 IMPORTATION FILAMENT v5 GLOBALE
-use Filament\Actions\EditAction; // 🔥 IMPORTATION FILAMENT v5 GLOBALE
-use Filament\Actions\BulkActionGroup; // 🔥 IMPORTATION FILAMENT v5 GLOBALE
-use Filament\Actions\DeleteBulkAction; // 🔥 IMPORTATION FILAMENT v5 GLOBALE
+use Filament\Actions\Action;
+use Filament\Actions\EditAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Support\Icons\Heroicon;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PaymentsTable
 {
@@ -20,19 +21,21 @@ class PaymentsTable
             ->filters([
                 // Vos filtres existants...
             ])
-            // 🔥 CONFIGURATION V5 : Les actions individuelles se déclarent dans recordActions
+            // Les actions individuelles sur chaque ligne
             ->recordActions([
                 EditAction::make(),
 
                 Action::make('print')
                     ->label('Imprimer')
-                    ->icon(Heroicon::OutlinedPrinter) // Image colorée v5
-                    ->color('success') // Vert hôtelier
+                    ->icon(Heroicon::OutlinedPrinter)
+                    ->color('success')
                     ->url(fn ($record): string => route('receipt.print', $record))
                     ->openUrlInNewTab(),
             ])
-            // 🔥 CONFIGURATION V5 : Les actions de groupe se déclarent dans toolbarActions
-            ->toolbarActions([
+            // 🔥 CORRECTION : Les boutons globaux du haut se déclarent dans headerActions
+            
+            // Les actions lorsque l'on coche plusieurs lignes
+            ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

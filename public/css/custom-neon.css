@@ -66,3 +66,14 @@
 .fi-sidebar-item-active .fi-sidebar-item-icon {
     color: #ffffff !important; /* L'icône de la page active devient blanche */
 }
+/* --- AJUSTEMENT DU LOGO DE L'HÔTEL --- */
+.fi-sidebar-header .fi-logo img {
+    max-width: 100%;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+/* Petit effet au survol du logo */
+.fi-sidebar-header .fi-logo img:hover {
+    transform: scale(1.05);
+}

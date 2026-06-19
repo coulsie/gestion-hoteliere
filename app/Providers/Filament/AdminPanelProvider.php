@@ -31,6 +31,11 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
 
+            // 🔥 CHANGER LE LOGO : Remplace définitivement le texte "Laravel" par le nom de votre hôtel
+            ->brandName('HOTEL BEL HORIZON')
+
+            // 🔥 AJOUT : Intègre l'image de votre logo au-dessus du menu latéral
+            ->brandLogo(asset('images/logo-hotel.png'))
             // 🎨 PALETTE ÉCLATANTE HAUTE SÉLECTION (Couleurs néons ultra contrastées)
             ->colors([
                 'primary' => Color::Fuchsia,
