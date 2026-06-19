@@ -4,7 +4,7 @@ namespace App\Filament\Resources\PaymentResource\Tables;
 
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\Filter; // 🔥 UTILISATION D'UN FILTRE DE REQUETE DE BASE
+use Filament\Tables\Filters\Filter;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\DatePicker;
 use Filament\Actions\Action;
@@ -57,42 +57,9 @@ class PaymentsTable
             ])
 
             ->filters([
-                // 🔥 LA SOLUTION ULTIME : On filtre sur le TEXTE REEL du numéro de reçu pour contourner le bug du groupe
-                Filter::make('choix_de_caisse')
-                    ->form([
-                        Select::make('caisse')
-                            ->label('Filtrer par Caisse')
-                            ->options([
-                                'chambre' => '🏨 Caisse Hébergement / Hôtel',
-                                'restauration' => '🍽️ Caisse Restaurant & Comptoir',
-                                'salle' => '🏢 Caisse Salle Événementielle',
-                            ])
-                            ->placeholder('Toutes les caisses mélangées')
-                            ->live(),
-                    ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        if (empty($data['caisse'])) {
-                            return $query;
-                        }
+                // ❌ LE FILTRE DE CAISSE DANS L'ENTONNOIR A ÉTÉ SUPPRIMÉ POUR ÉVITER LES CONFLITS AVEC LES ONGLETS
 
-                        // On force la base de données à découper les lignes selon l'écriture de vos reçus
-                        return match ($data['caisse']) {
-                            // Le restaurant contient obligatoirement "REC-RESTO-"
-                            'restauration' => $query->where('receipt_number', 'LIKE', '%RESTO%'),
-
-                            // La salle contient obligatoirement "REC-SALLE-"
-                            'salle' => $query->where('receipt_number', 'LIKE', '%SALLE%'),
-
-                            // L'hébergement contient REC- mais ne contient NI resto NI salle
-                            'chambre' => $query->where('receipt_number', 'LIKE', 'REC-%')
-                                               ->where('receipt_number', 'NOT LIKE', '%RESTO%')
-                                               ->where('receipt_number', 'NOT LIKE', '%SALLE%'),
-
-                            default => $query,
-                        };
-                    }),
-
-                // 2. LES FILTRES TEMPORELS OBLIGATOIRES (Pointent sur paid_at)
+                // ⏳ SEUL LE FILTRE TEMPORELEST CONSERVÉ (Il fonctionne parfaitement sur paid_at)
                 Filter::make('periode_comptable')
                     ->label('Période de la Recette')
                     ->form([
@@ -101,7 +68,7 @@ class PaymentsTable
                             ->options([
                                 'tout' => '🌐 Afficher tout (Historique complet)',
                                 'aujourdhui' => '📅 Aujourd\'hui (Recette Journalière)',
-                                'semaine' => '📆 Cette semaine (7 derniers locations)',
+                                'semaine' => '📆 Cette semaine (7 derniers jours)',
                                 'personnalise' => '🔧 Période personnalisée (Choisir dates)',
                             ])
                             ->default('tout')
