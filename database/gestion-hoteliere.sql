@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1:3307
--- Généré le : ven. 19 juin 2026 à 09:41
+-- Généré le : ven. 19 juin 2026 à 12:39
 -- Version du serveur : 11.4.9-MariaDB
 -- Version de PHP : 8.3.28
 
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS `bookings` (
   PRIMARY KEY (`id`),
   KEY `bookings_room_id_foreign` (`room_id`),
   KEY `bookings_key_card_id_foreign` (`key_card_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `bookings`
@@ -84,7 +84,8 @@ INSERT INTO `bookings` (`id`, `room_id`, `key_card_id`, `key_card_assigned_at`, 
 (13, 14, NULL, NULL, NULL, 'Yao Magloire', '2026-06-18', '2026-06-18', 15000.00, '2026-06-18 10:08:13', '2026-06-18 10:08:13'),
 (14, 3, NULL, NULL, NULL, 'BAT', '2026-06-18', '2026-06-23', 75000.00, '2026-06-18 12:52:08', '2026-06-18 12:52:08'),
 (15, 15, NULL, NULL, NULL, 'Cisse Inza', '2026-06-18', '2026-06-18', 20000.00, '2026-06-18 15:10:53', '2026-06-18 15:10:53'),
-(16, 2, NULL, NULL, NULL, 'OUATT1', '2026-06-18', '2026-06-26', 120000.00, '2026-06-18 15:31:21', '2026-06-18 15:31:21');
+(16, 2, NULL, NULL, NULL, 'OUATT1', '2026-06-18', '2026-06-26', 120000.00, '2026-06-18 15:31:21', '2026-06-18 15:31:21'),
+(17, 7, NULL, NULL, NULL, 'BAMBA N\'ZO', '2026-06-19', '2026-06-24', 100000.00, '2026-06-19 10:30:42', '2026-06-19 10:30:42');
 
 -- --------------------------------------------------------
 
@@ -174,7 +175,7 @@ CREATE TABLE IF NOT EXISTS `catering_orders` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `catering_orders_order_number_unique` (`order_number`),
   KEY `catering_orders_booking_id_foreign` (`booking_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `catering_orders`
@@ -204,7 +205,8 @@ INSERT INTO `catering_orders` (`id`, `order_number`, `booking_id`, `client_name`
 (21, 'CMD-20260617-1530-50', NULL, 'Client Comptoir', 40000.00, 'paye', '2026-06-17 15:30:51', '2026-06-17 15:31:04'),
 (22, 'CMD-20260617-1549-96', NULL, 'Client Comptoir', 92500.00, 'paye', '2026-06-17 15:49:40', '2026-06-17 15:49:55'),
 (23, 'CMD-20260618-1421-40', NULL, 'Client Comptoir', 12500.00, 'paye', '2026-06-18 14:21:49', '2026-06-18 14:22:02'),
-(24, 'CMD-20260618-1512-63', NULL, 'Client Comptoir', 20000.00, 'paye', '2026-06-18 15:12:11', '2026-06-18 15:12:28');
+(24, 'CMD-20260618-1512-63', NULL, 'Client Comptoir', 20000.00, 'paye', '2026-06-18 15:12:11', '2026-06-18 15:12:28'),
+(25, 'CMD-20260619-1026-69', 14, 'Client Comptoir', 15500.00, 'paye', '2026-06-19 10:26:16', '2026-06-19 10:26:32');
 
 -- --------------------------------------------------------
 
@@ -224,7 +226,7 @@ CREATE TABLE IF NOT EXISTS `catering_order_items` (
   PRIMARY KEY (`id`),
   KEY `catering_order_items_catering_order_id_foreign` (`catering_order_id`),
   KEY `catering_order_items_catering_item_id_foreign` (`catering_item_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=56 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=58 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `catering_order_items`
@@ -285,7 +287,9 @@ INSERT INTO `catering_order_items` (`id`, `catering_order_id`, `catering_item_id
 (52, 22, 5, 5, 3500.00, '2026-06-17 15:49:40', '2026-06-17 15:49:40'),
 (53, 23, 1, 5, 2500.00, '2026-06-18 14:21:49', '2026-06-18 14:21:49'),
 (54, 24, 2, 5, 2500.00, '2026-06-18 15:12:11', '2026-06-18 15:12:11'),
-(55, 24, 1, 3, 2500.00, '2026-06-18 15:12:11', '2026-06-18 15:12:11');
+(55, 24, 1, 3, 2500.00, '2026-06-18 15:12:11', '2026-06-18 15:12:11'),
+(56, 25, 1, 2, 2500.00, '2026-06-19 10:26:16', '2026-06-19 10:26:16'),
+(57, 25, 5, 3, 3500.00, '2026-06-19 10:26:16', '2026-06-19 10:26:16');
 
 -- --------------------------------------------------------
 
@@ -558,7 +562,7 @@ CREATE TABLE IF NOT EXISTS `payments` (
   UNIQUE KEY `payments_receipt_number_unique` (`receipt_number`),
   KEY `payments_event_booking_id_foreign` (`event_booking_id`),
   KEY `payments_user_id_foreign` (`user_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=117 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=119 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `payments`
@@ -644,7 +648,9 @@ INSERT INTO `payments` (`id`, `event_booking_id`, `payment_type`, `receipt_numbe
 (113, 15, 'chambre', 'REC-20260618-151111', 20000.00, 'cash', 'validé / encaissé', '2026-06-18 15:11:16', NULL, NULL, '2026-06-18 15:11:16', '2026-06-18 15:11:16'),
 (114, 14, 'chambre', 'REC-20260618-151130', 25000.00, 'cash', 'validé / encaissé', '2026-06-18 15:11:36', NULL, NULL, '2026-06-18 15:11:36', '2026-06-18 15:11:36'),
 (115, NULL, 'chambre', 'REC-RESTO-20260618-151228', 20000.00, 'mtn_momo', 'validé / encaissé', '2026-06-18 15:12:28', NULL, NULL, '2026-06-18 15:12:28', '2026-06-18 15:12:28'),
-(116, 16, 'chambre', 'REC-20260618-153127', 90000.00, 'orange_money', 'validé / encaissé', '2026-06-18 15:31:43', NULL, NULL, '2026-06-18 15:31:43', '2026-06-18 15:31:43');
+(116, 16, 'chambre', 'REC-20260618-153127', 90000.00, 'orange_money', 'validé / encaissé', '2026-06-18 15:31:43', NULL, NULL, '2026-06-18 15:31:43', '2026-06-18 15:31:43'),
+(117, NULL, 'chambre', 'REC-RESTO-20260619-102632', 15500.00, 'wave', 'validé / encaissé', '2026-06-19 10:26:32', NULL, NULL, '2026-06-19 10:26:32', '2026-06-19 10:26:32'),
+(118, 16, 'chambre', 'REC-20260619-103114', 15000.00, 'cash', 'validé / encaissé', '2026-06-19 10:31:22', NULL, NULL, '2026-06-19 10:31:22', '2026-06-19 10:31:22');
 
 -- --------------------------------------------------------
 
@@ -1110,7 +1116,7 @@ INSERT INTO `rooms` (`id`, `room_type_id`, `number`, `status`, `created_at`, `up
 (4, 4, '24', 'disponible', '2026-06-08 13:21:51', '2026-06-08 13:21:51', 'propre'),
 (5, 1, '25', 'occupee', '2026-06-08 13:21:59', '2026-06-18 07:24:49', 'propre'),
 (6, 3, '26', 'occupee', '2026-06-08 13:22:24', '2026-06-18 07:59:03', 'propre'),
-(7, 2, '27', 'disponible', '2026-06-08 13:22:32', '2026-06-08 13:22:32', 'propre'),
+(7, 2, '27', 'occupee', '2026-06-08 13:22:32', '2026-06-19 10:30:42', 'propre'),
 (8, 2, '28', 'disponible', '2026-06-08 13:22:40', '2026-06-08 13:22:40', 'propre'),
 (9, 2, '29', 'occupee', '2026-06-08 13:22:48', '2026-06-18 08:23:32', 'propre'),
 (10, 2, '30', 'disponible', '2026-06-08 13:23:00', '2026-06-08 13:23:00', 'propre'),
