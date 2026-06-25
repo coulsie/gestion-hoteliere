@@ -6,20 +6,18 @@ use Filament\Pages\Page;
 use App\Models\Booking;
 use App\Models\Room;
 use Illuminate\Support\Carbon;
-use BackedEnum;
-use UnitEnum;
-use Filament\Support\Icons\Heroicon; // 🔥 IMPORTATION DE L'ICÔNE EN IMAGE
-use BezhanSalleh\FilamentShield\Traits\HasPageShield; // 🔥 IMPORTATION DE LA SÉCURITÉ SHIELD
+use Illuminate\Support\Facades\Auth;
+use Filament\Support\Icons\Heroicon;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 
 class Planning extends Page
 {
-    use HasPageShield; // 🔥 ACTIVE LE CONTRÔLE DES ACCÈS PAR RÔLE SUR CETTE PAGE
+    use HasPageShield; // Conserve le contrôle d'accès Shield par rôle
 
-    // 🔥 CORRECTIF VISUEL : Utilisation de l'objet Heroicon natif pour afficher l'image colorée
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendarDays;
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-calendar';
 
     protected static ?string $navigationLabel = 'Planning des Occupations';
-    protected static string|UnitEnum|null $navigationGroup = 'Gestion Hôtelière';
+    protected static string|\UnitEnum|null $navigationGroup = 'Gestion Hôtelière';
     protected static ?string $title = 'Planning & Grille d\'Occupation';
 
     protected string $view = 'filament.pages.planning';
@@ -27,50 +25,105 @@ class Planning extends Page
     public array $joursDuMois = [];
     public array $grilleOccupation = [];
     public string $moisActuelTexte = '';
+    public string $currentMonthStr = ''; // Stocke le mois au format Y-m
 
     public function mount(): void
     {
-        // 1. Détermination du mois en cours
-        $debutMois = Carbon::now()->startOfMonth();
-        $finMois = Carbon::now()->endOfMonth();
-        $this->moisActuelTexte = Carbon::now()->translatedFormat('F Y');
+        // Initialisation sur le mois courant si vide
+        if (empty($this->currentMonthStr)) {
+            $this->currentMonthStr = Carbon::now()->format('Y-m');
+        }
 
-        // 2. Génération des jours du mois pour l'en-tête du tableau
+        $this->chargerPlanning();
+    }
+
+    /**
+     * 🔥 NAVIGATION DYNAMIQUE DES MOIS
+     */
+    public function moisPrecedent(): void
+    {
+        $this->currentMonthStr = Carbon::parse($this->currentMonthStr . '-01')->subMonth()->format('Y-m');
+        $this->chargerPlanning();
+    }
+
+    public function moisSuivant(): void
+    {
+        $this->currentMonthStr = Carbon::parse($this->currentMonthStr . '-01')->addMonth()->format('Y-m');
+        $this->chargerPlanning();
+    }
+
+    /**
+     * 📊 ALGORITHME GÉNÉRATEUR DE LA GRILLE BOOTSTRAP
+     */
+    public function chargerPlanning(): void
+    {
+        $this->joursDuMois = [];
+        $this->grilleOccupation = [];
+
+        $debutMois = Carbon::parse($this->currentMonthStr . '-01')->startOfMonth();
+        $finMois = Carbon::parse($this->currentMonthStr . '-01')->endOfMonth();
+
+        // Label en français (ex: "Juillet 2026")
+        $this->moisActuelTexte = ucfirst($debutMois->translatedFormat('F Y'));
+
         $nbJours = $debutMois->daysInMonth;
         for ($i = 1; $i <= $nbJours; $i++) {
             $this->joursDuMois[] = $debutMois->copy()->day($i);
         }
 
-        // 3. Récupération de toutes les chambres
-        $chambres = Room::all();
+        $chambres = Room::orderBy('number', 'asc')->get();
 
-        // 4. Récupération des réservations qui chevauchent ce mois
         $reservations = Booking::where('check_out', '>=', $debutMois)
             ->where('check_in', '<=', $finMois)
             ->get();
 
-        // 5. Construction de la grille d'occupation (Chambre par Chambre, Jour par Jour)
         foreach ($chambres as $chambre) {
             $planningChambre = [];
 
             foreach ($this->joursDuMois as $jour) {
-                // Cherche s'il y a une réservation pour cette chambre à ce jour précis
                 $reservationTrouvee = $reservations->first(function ($booking) use ($chambre, $jour) {
-                    $checkIn = Carbon::parse($booking->check_in);
-                    $checkOut = Carbon::parse($booking->check_out);
+                    $checkIn = Carbon::parse($booking->check_in)->startOfDay();
+                    $checkOut = Carbon::parse($booking->check_out)->endOfDay();
                     return $booking->room_id == $chambre->id && $jour->between($checkIn, $checkOut);
                 });
 
-                $planningChambre[$jour->format('Y-m-d')] = $reservationTrouvee ? [
-                    'id' => $reservationTrouvee->id,
-                    'client' => $reservationTrouvee->customer_name,
-                    'type' => Carbon::parse($reservationTrouvee->check_in)->format('Y-m-d') == Carbon::parse($reservationTrouvee->check_out)->format('Y-m-d') ? 'passage' : 'sejour'
-                ] : null;
+                if ($reservationTrouvee) {
+                    $checkIn = Carbon::parse($reservationTrouvee->check_in);
+                    $checkOut = Carbon::parse($reservationTrouvee->check_out);
+
+                    // Détermination du type de séjour
+                    $isPassage = $checkIn->diffInHours($checkOut) <= 12 || $checkIn->isSameDay($checkOut);
+
+                    // 🔥 GENERATEUR D'URL NATIF FILAMENT V5 IMMUNISÉ CONTRE LES ERREURS DE ROUTAGES
+                    $urlSecurisee = '#';
+
+
+                    // 🔥 RECTIFICATION FILAMENT V5 POUR LES RESSOURCES EN MODE MODALE
+                    try {
+                        // Construit l'URL pointant vers la liste mais en forçant le déclenchement immédiat de la modale edit
+                        $urlSecurisee = \App\Filament\Resources\BookingResource::getUrl('index') . "?tableAction=edit&tableActionRecord={$reservationTrouvee->id}";
+                    } catch (\Exception $e) {
+                        $urlSecurisee = url("/admin/reservations-de-chambres?tableAction=edit&tableActionRecord={$reservationTrouvee->id}");
+                    }
+
+
+                    $planningChambre[$jour->format('Y-m-d')] = [
+                        'id' => $reservationTrouvee->id,
+                        'client' => $reservationTrouvee->customer_name ?? 'Client Événement',
+                        'type' => $isPassage ? 'passage' : 'sejour',
+                        'url' => $urlSecurisee, // 🔥 Transmet l'URL valide générée par le cœur de Filament
+                        // Sécurité : Seul le super_admin verra les liens cliquables d'édition
+                        'cliquable' => Auth::user()?->hasRole('super_admin') ?? false
+                    ];
+                } else {
+                    $planningChambre[$jour->format('Y-m-d')] = null;
+                }
             }
 
             $this->grilleOccupation[] = [
-                'chambre' => $chambre->number,
-                'planning' => $planningChambre,
+                'chambre_number' => $chambre->number,
+                'chambre_type'   => $chambre->roomType->name ?? 'Standard',
+                'planning'       => $planningChambre,
             ];
         }
     }

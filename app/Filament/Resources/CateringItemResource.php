@@ -21,48 +21,41 @@ class CateringItemResource extends Resource
     protected static ?string $pluralModelLabel = 'Services Restauration';
     protected static ?string $modelLabel = 'Service Restauration';
 
-    public static function form(Schema $schema): Schema
+      public static function form(Schema $schema): Schema
     {
         return $schema
+            ->columns(2)
             ->components([
                 Forms\Components\TextInput::make('name')
                     ->required()
-                    ->label('Nom du plat / Forfait banquet'),
+                    ->label('Nom du plat / Forfait banquet')
+                    ->columnSpan(1),
 
                 Forms\Components\Select::make('category')
+                    ->label('Catégorie Restauration')
                     ->options([
-                        'plat' => 'Plat / Menu Cuisine',
-                        'boisson' => 'Boisson / Boisson Bar',
-                        'forfait_buffet' => 'Forfait Buffet / Pause-Café',
+                        'plat' => '🍽️ Plat / Menu Cuisine',
+                        'boisson' => '🍹 Boisson / Boisson Bar',
+                        'forfait_buffet' => '🏢 Forfait Buffet / Pause-Café',
                     ])
                     ->required()
-                    ->label('Catégorie Restauration'),
+                    ->live()
+                    ->columnSpan(1),
 
                 Forms\Components\TextInput::make('unit_price')
                     ->numeric()
                     ->prefix('FCFA')
                     ->required()
-                    ->label('Prix Unitaire'),
+                    ->label('Prix Unitaire')
+                    ->columnSpanFull(),
 
-                // 🔥 1. Assurez-vous que le champ "category" existant dispose de ->live() pour réveiller le formulaire
-                Forms\Components\Select::make('category')
-                    ->label('Catégorie')
-                    ->options([
-                        'plat' => '🍽️ Plat Cuisiné',
-                        'boisson' => '🍹 Boisson / Bar',
-                        'forfait_buffet' => '🏢 Forfait Buffet',
-                    ])
-                    ->required()
-                    ->live(), // 🔥 OBLIGATOIRE pour rendre le formulaire réactif
-
-                // 🔥 2. Ajoutez ensuite les deux champs de stock avec la restriction "boisson"
                 Forms\Components\TextInput::make('stock_quantity')
                     ->label('Quantité en Stock Actuelle')
                     ->numeric()
                     ->default(0)
                     ->required()
-                    // 🛡️ SÉCURITÉ : Visible UNIQUEMENT si la catégorie vaut 'boisson'
-                    ->visible(fn ($get) => $get('category') === 'boisson'),
+                    ->visible(fn ($get) => $get('category') === 'boisson')
+                    ->columnSpan(1),
 
                 Forms\Components\TextInput::make('alert_threshold')
                     ->label('Seuil d\'alerte critique')
@@ -70,10 +63,54 @@ class CateringItemResource extends Resource
                     ->default(5)
                     ->required()
                     ->hint('Alerte si le stock descend sous ce nombre')
-                    // 🛡️ SÉCURITÉ : Visible UNIQUEMENT si la catégorie vaut 'boisson'
-                    ->visible(fn ($get) => $get('category') === 'boisson'),
+                    ->visible(fn ($get) => $get('category') === 'boisson')
+                    ->columnSpan(1),
 
-                        ]);
+                // ====================================================================
+                // 📊 SECTION HISTORIQUE DES VENTES CORRIGÉE NAMESPACE V5
+                // ====================================================================
+                // 🔥 FIX : Utilisation du namespace de schéma unifié obligatoire en v5
+                \Filament\Schemas\Components\Section::make('📈 Historique Récent des Ventes au Bar')
+                    ->description('Liste des dernières sorties et encaissements enregistrés pour cette boisson.')
+                    ->collapsible()
+                    ->visible(fn ($get, $record) => $get('category') === 'boisson' && $record !== null)
+                    ->columnSpanFull()
+                    ->schema([
+                        Forms\Components\Repeater::make('orderItems')
+                            ->relationship('orderItems')
+                            ->label('Sorties enregistrées')
+                            ->columnSpanFull()
+                            ->columns(4)
+                            ->addable(false)
+                            ->deletable(false)
+                            ->reorderable(false)
+                            ->components([
+                                Forms\Components\TextInput::make('created_at')
+                                    ->label('Date & Heure')
+                                    ->afterStateHydrated(fn ($component, $state) => $component->state($state ? \Illuminate\Support\Carbon::parse($state)->format('d/m/Y H:i') : '—'))
+                                    ->readOnly(),
+
+                                Forms\Components\TextInput::make('quantity')
+                                    ->label('Quantité Vendue')
+                                    ->suffix('bouteille(s)')
+                                    ->readOnly(),
+
+                                Forms\Components\TextInput::make('price')
+                                    ->label('Prix Appliqué')
+                                    ->suffix('FCFA')
+                                    ->readOnly(),
+
+                                Forms\Components\Placeholder::make('total_ligne')
+                                    ->label('Encaissé Total')
+                                    ->content(function ($get) {
+                                        $prix = (float) ($get('price') ?? 0);
+                                        $qte = (int) ($get('quantity') ?? 1);
+                                        return number_format($prix * $qte, 0, '.', ' ') . ' FCFA';
+                                    }),
+                            ])
+                    ]),
+                // ====================================================================
+            ]);
     }
 
         public static function table(Table $table): Table

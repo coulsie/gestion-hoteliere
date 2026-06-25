@@ -1,100 +1,190 @@
 <x-filament-panels::page>
-    <div class="p-6 bg-white rounded-2xl shadow-md border border-gray-100 dark:bg-gray-900 dark:border-gray-800 transition-all duration-300">
+    <!-- 📦 INTÉGRATION DE BOOTSTRAP 5.2.3 -->
+    <link href="https://jsdelivr.net" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
 
-        <!-- En-tête du Planning Style Moderne -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 pb-4 border-b border-gray-100 dark:border-gray-800">
-            <div>
-                <h2 class="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white flex items-center gap-2">
-                    <span>🗓️</span> Planning de l'Hôtel :
-                    <span class="capitalize bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 px-3 py-1 rounded-lg text-lg font-bold border border-emerald-200/50 dark:border-emerald-800/30">
-                        {{ $moisActuelTexte }}
-                    </span>
-                </h2>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Vue d'ensemble en temps réel des occupations et des chambres disponibles.</p>
-            </div>
+    <style>
+        /* 🎨 RE-STYLISATION GRAPHIQUE COMPTABLE HOTELIÈRE */
+        .pms-wrapper {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+        }
+        .pms-table-responsive {
+            max-height: 72vh;
+            overflow: auto;
+            border: 3px solid #0f172a !important;
+            border-radius: 8px;
+        }
+        .pms-table {
+            table-layout: fixed;
+            width: max-content;
+            margin-bottom: 0 !important;
+        }
+        .col-chambre {
+            width: 170px !important;
+            min-width: 170px !important;
+            max-width: 170px !important;
+        }
+        .col-jour {
+            width: 55px !important;
+            min-width: 55px !important;
+            max-width: 55px !important;
+        }
+        .pms-table th, .pms-table td {
+            border: 1px solid #cbd5e1 !important;
+            padding: 4px !important;
+            vertical-align: middle !important;
+            text-align: center !important;
+            height: 52px !important;
+        }
+        .sticky-chambre {
+            position: sticky !important;
+            left: 0 !important;
+            background: linear-gradient(90deg, #1e293b 0%, #334155 100%) !important;
+            color: #ffffff !important;
+            z-index: 10 !important;
+            border-right: 4px solid #0f172a !important;
+            text-align: left !important;
+            padding-left: 12px !important;
+        }
+        tr:nth-child(even) .sticky-chambre {
+            background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%) !important;
+        }
+        .sticky-header {
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 11 !important;
+        }
+        .sticky-header-chambre {
+            position: sticky !important;
+            top: 0 !important;
+            left: 0 !important;
+            z-index: 12 !important;
+            background-color: #0f172a !important;
+            color: #ffffff !important;
+            border-right: 4px solid #0f172a !important;
+            font-weight: 900;
+        }
+        .badge-pms {
+            display: block !important;
+            position: relative !important;
+            z-index: 20 !important;
+            width: 100%;
+            height: 100%;
+            font-size: 11px !important;
+            font-weight: 800 !important;
+            line-height: 1.3 !important;
+            padding: 8px 4px !important;
+            border-radius: 5px !important;
+            text-decoration: none !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            cursor: pointer !important;
+        }
+        .badge-pms:hover {
+            transform: scale(1.04);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+            color: #fff !important;
+        }
+        .cell-libre {
+            background-color: #f8fafc !important;
+            height: 100%;
+            width: 100%;
+            border-radius: 2px;
+            transition: background 0.15s ease;
+        }
+        tr:nth-child(even) .cell-libre {
+            background-color: #ffffff !important;
+        }
+        .cell-libre:hover {
+            background-color: #d1fae5 !important;
+        }
+    </style>
 
-            <!-- Légende Éclatante -->
-            <div class="flex items-center gap-3 bg-gray-50 dark:bg-gray-800/50 p-2 rounded-xl border border-gray-200/40 dark:border-gray-700/30">
-                <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-1">Légende :</span>
-                <span class="flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[11px] font-bold rounded-lg shadow-sm">
-                    <span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span> Séjour Classique
-                </span>
-                <span class="flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[11px] font-bold rounded-lg shadow-sm">
-                    <span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span> Passage Horaire
-                </span>
+    <div class="pms-wrapper container-fluid px-0">
+
+        <!-- 🎛️ NAVIGATION MOIS -->
+        <div class="card p-3 mb-3 border-dark shadow-sm bg-white text-dark">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <div class="btn-group shadow-sm" role="group">
+                        <button type="button" wire:click="moisPrecedent" class="btn btn-dark fw-bold">
+                            « Mois Précédent
+                        </button>
+                        <button type="button" wire:click="moisSuivant" class="btn btn-dark fw-bold">
+                            Mois Suivant »
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <h3 class="fw-bolder text-uppercase m-0 border-bottom border-dark border-3 d-inline-block pb-1">
+                        📅 {{ $moisActuelTexte }}
+                    </h3>
+                </div>
+                <div class="col-md-4 d-flex justify-content-end align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-1"><span class="badge bg-light border border-dark" style="width:15px;height:15px;display:inline-block;"></span> <small class="fw-bold">Libre</small></div>
+                    <div class="d-flex align-items-center gap-1"><span class="badge bg-primary" style="width:15px;height:15px;display:inline-block;"></span> <small class="fw-bold">Séjour (Nuitée)</small></div>
+                    <div class="d-flex align-items-center gap-1"><span class="badge bg-warning text-dark" style="width:15px;height:15px;display:inline-block;"></span> <small class="fw-bold">Passage (Horaire)</small></div>
+                </div>
             </div>
         </div>
 
-        <!-- Grille d'occupation Haute Visibilité -->
-        <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm" style="max-height: 650px;">
-            <table class="w-full border-collapse text-left text-xs">
+        <!-- 📊 GRILLE PMS QUADRILLÉE -->
+        <div class="pms-table-responsive shadow">
+            <table class="table table-bordered pms-table m-0">
                 <thead>
-                    <tr class="bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                        <!-- Colonne fixe Chambre Header -->
-                        <th class="p-4 font-black text-gray-700 dark:text-gray-300 uppercase tracking-wider text-center border-r border-gray-200 dark:border-gray-700 sticky left-0 bg-gray-100 dark:bg-gray-800 z-30 min-w-[120px] shadow-[3px_0_5px_rgba(0,0,0,0.04)]">
-                            Chambres
+                    <tr class="sticky-header">
+                        <th class="col-chambre sticky-header-chambre align-middle text-center bg-dark text-white">
+                            <div class="fw-black text-uppercase tracking-wider" style="font-size: 12px; font-weight:900;">CHAMBRES</div>
                         </th>
                         @foreach($joursDuMois as $jour)
                             @php
-                                $isWeekend = $jour->isWeekend();
                                 $isToday = $jour->isToday();
+                                $isWeekend = $jour->isWeekend();
+                                $bgHeaderClass = $isToday ? 'bg-danger text-white' : ($isWeekend ? 'bg-secondary text-white' : 'bg-dark text-white');
                             @endphp
-                            <th class="p-2 border-r border-gray-200 dark:border-gray-700 text-center min-w-[50px] transition-colors
-                                {{ $isToday ? 'bg-primary-50 dark:bg-primary-950/30' : ($isWeekend ? 'bg-gray-50 dark:bg-gray-800/40' : '') }}">
-                                <div class="text-[10px] font-bold uppercase {{ $isWeekend ? 'text-rose-500 dark:text-rose-400' : 'text-gray-400 dark:text-gray-500' }}">
-                                    {{ $jour->isoFormat('ddd') }}
-                                </div>
-                                <div class="mt-1 flex items-center justify-center">
-                                    @if($isToday)
-                                        <span class="bg-gradient-to-r from-primary-500 to-primary-600 text-white font-black rounded-full w-7 h-7 flex items-center justify-center shadow-md animate-bounce ring-4 ring-primary-500/20">
-                                            {{ $jour->day }}
-                                        </span>
-                                    @else
-                                        <span class="text-sm font-bold {{ $isWeekend ? 'text-rose-600 dark:text-rose-400' : 'text-gray-700 dark:text-gray-300' }}">
-                                            {{ $jour->day }}
-                                        </span>
-                                    @endif
-                                </div>
+                            <th class="col-jour text-center p-1 align-middle {{ $bgHeaderClass }}">
+                                <div class="text-uppercase tracking-normal text-white-50" style="font-size: 9px;">{{ $jour->translatedFormat('D') }}</div>
+                                <div class="fs-5 fw-extrabold lh-1 mt-1">{{ $jour->format('d') }}</div>
                             </th>
                         @endforeach
                     </tr>
                 </thead>
-
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                    @foreach($grilleOccupation as $item)
-                        <tr class="transition-colors duration-150 hover:bg-gray-50/70 dark:hover:bg-gray-800/30">
-                            <!-- Colonne fixe de la chambre stylisée -->
-                            <td class="p-4 font-extrabold text-sm border-r border-gray-200 dark:border-gray-700 sticky left-0 bg-white dark:bg-gray-900 z-20 text-gray-900 dark:text-white shadow-[4px_0_6px_rgba(0,0,0,0.03)] flex items-center gap-2">
-                                <span class="flex h-2 w-2 rounded-full bg-emerald-500"></span>
-                                No. {{ $item['chambre'] }}
+                <tbody>
+                    @foreach($grilleOccupation as $ligne)
+                        <tr>
+                            <td class="col-chambre sticky-chambre align-middle">
+                                <span class="d-block fw-extrabold text-white fs-5">Ch. {{ $ligne['chambre_number'] }}</span>
+                                <small class="text-white-50 text-uppercase fw-bold d-block truncate" style="font-size: 10px; max-width: 145px;">{{ $ligne['chambre_type'] }}</small>
                             </td>
 
-                            <!-- Cases des jours épurées -->
                             @foreach($joursDuMois as $jour)
                                 @php
-                                    $data = $item['planning'][$jour->format('Y-m-d')];
-                                    $isWeekend = $jour->isWeekend();
-                                    $isToday = $jour->isToday();
+                                    $cellule = $ligne['planning'][$jour->format('Y-m-d')];
                                 @endphp
-                                <td class="p-1 border-r border-b border-gray-100 dark:border-gray-800 text-center relative h-14 transition-colors
-                                    {{ $isToday ? 'bg-primary-50/20 dark:bg-primary-950/10' : ($isWeekend ? 'bg-gray-50/30 dark:bg-gray-800/10' : '') }}">
+                                <td class="col-jour p-1">
+                                    @if($cellule)
+                                        @php
+                                            $urlEdit = $cellule['url'] ?? '#';
+                                            $bootstrapClass = $cellule['type'] === 'passage' ? 'bg-warning text-dark' : 'bg-primary text-white';
+                                        @endphp
 
-                                    @if($data)
-                                        <!-- Blocs de Réservations Éclatants avec dégradés de couleurs -->
-                                        <a href="{{ url('/admin/bookings/' . $data['id'] . '/edit') }}"
-                                           class="absolute inset-1 p-1.5 rounded-xl text-[10px] font-black text-white flex flex-col items-center justify-center overflow-hidden transition-all duration-200 hover:scale-[1.04] hover:shadow-md shadow-sm border
-                                           {{ $data['type'] === 'passage'
-                                                ? 'bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500 border-orange-400 dark:border-orange-600 shadow-orange-500/20'
-                                                : 'bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 border-blue-400 dark:border-blue-600 shadow-blue-500/20' }}"
-                                           title="Client: {{ $data['client'] }} (Cliquez pour modifier ou encaisser)">
+                                        @if($cellule['cliquable'])
+                                            <!-- Version Admin : Bouton cliquable direct -->
+                                            <!-- 🛠️ FIX : Retrait de wire:navigate pour laisser Filament exécuter la modale au chargement -->
+                                            <a href="{{ $urlEdit }}" class="badge-pms {{ $bootstrapClass }}" title="Client : {{ $cellule['client'] }} (Cliquez pour modifier)">
+                                                👤 {{ $cellule['client'] }}
+                                            </a>
+                                        @else
+                                            <!-- Version Réceptionniste : Badge verrouillé anti-fraude -->
+                                            <div class="badge-pms {{ $bootstrapClass }} opacity-75" style="cursor: not-allowed;" title="Client : {{ $cellule['client'] }} (Modification Bloquée)">
+                                                🔒 {{ $cellule['client'] }}
+                                            </div>
+                                        @endif
 
-                                            <!-- Icône et nom épurés -->
-                                            <span class="block truncate max-w-full text-center tracking-wide uppercase">
-                                                {{ $data['type'] === 'passage' ? '🕒' : '👤' }} {{ Str::limit($data['client'], 8, '..') }}
-                                            </span>
-                                        </a>
+                                    @else
+                                        <div class="cell-libre" title="Chambre disponible à la réservation"></div>
                                     @endif
-
                                 </td>
                             @endforeach
                         </tr>
@@ -102,5 +192,6 @@
                 </tbody>
             </table>
         </div>
+
     </div>
 </x-filament-panels::page>

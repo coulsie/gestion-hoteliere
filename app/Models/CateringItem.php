@@ -25,4 +25,11 @@ protected $guarded = [];
     {
         return $this->belongsTo(Booking::class, 'event_booking_id');
     }
+
+    public function orderItems(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        // 💡 Assurez-vous que le modèle "CateringOrderItem" correspond bien au nom dans votre dossier app/Models/
+        return $this->hasMany(\App\Models\CateringOrderItem::class, 'catering_item_id');
+    }
+
 }
