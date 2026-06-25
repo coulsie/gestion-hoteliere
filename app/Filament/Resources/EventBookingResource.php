@@ -10,6 +10,8 @@ use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth; // 🔥 IMPORTE LA FAÇADE CORRECTE DE LARAVEL
+
 
 class EventBookingResource extends Resource
 {
@@ -64,7 +66,7 @@ class EventBookingResource extends Resource
             ]);
     }
 
-    public static function table(Table $table): Table
+        public static function table(Table $table): Table
     {
         return $table
             ->columns([
@@ -90,7 +92,6 @@ class EventBookingResource extends Resource
                         default => $state
                     }),
 
-                // 1. TOTAL FACTURÉ (Calculateur forfaitaire ou BDD)
                 \Filament\Tables\Columns\TextColumn::make('total_amount')
                     ->label('Total Facturé')
                     ->state(function ($record) {
@@ -107,63 +108,57 @@ class EventBookingResource extends Resource
                     })
                     ->money('XOF'),
 
-                // 2. CUMUL DÉJÀ PAYÉ STRICTEMENT CLOISONNÉ PAR ID
-                            // 2. CUMUL DÉJÀ PAYÉ EN DIRECT CLOISONNÉ (AVEC PARENTHÈSES DE SÉCURITÉ SQL)
-            \Filament\Tables\Columns\TextColumn::make('total_paid')
-                ->label('Déjà Payé')
-                ->state(0)
-                ->badge()
-                ->color('success')
-                ->formatStateUsing(function ($record) {
-                    // Les parenthèses forcent SQL à chercher uniquement CET événement ET (salle OU préfixe)
-                    $cumul = (float) \Illuminate\Support\Facades\DB::table('payments')
-                        ->where('event_booking_id', $record->id)
-                        ->where(function ($query) {
-                            $query->where('payment_type', 'salle')
-                                  ->orWhere('receipt_number', 'LIKE', 'REC-SALLE-%');
+                \Filament\Tables\Columns\TextColumn::make('total_paid')
+                    ->label('Déjà Payé')
+                    ->badge()
+                    ->color('success')
+                    ->formatStateUsing(function ($record) {
+                        $cumul = (float) \Illuminate\Support\Facades\DB::table('payments')
+                            ->where('event_booking_id', $record->id)
+                            ->where(function ($query) {
+                                $query->where('payment_type', 'salle')
+                                      ->orWhere('receipt_number', 'LIKE', 'REC-SALLE-%');
                         })
                         ->sum('amount');
 
-                    return number_format($cumul, 0, '.', ' ') . ' F CFA';
-                }),
+                        return number_format($cumul, 0, '.', ' ') . ' F CFA';
+                    }),
 
-            // 3. RESTE À PAYER MATHÉMATIQUE PARFAIT
-            \Filament\Tables\Columns\TextColumn::make('balance_due')
-                ->label('Reste à Payer')
-                ->state(0)
-                ->badge()
-                ->color(function ($record) {
-                    $total = (float) ($record->total_amount ?? 0);
-                    if ($total <= 0) return 'gray';
+                \Filament\Tables\Columns\TextColumn::make('balance_due')
+                    ->label('Reste à Payer')
+                    ->badge()
+                    ->color(function ($record) {
+                        $total = (float) ($record->total_amount ?? 0);
+                        if ($total <= 0) return 'gray';
 
-                    $cumul = (float) \Illuminate\Support\Facades\DB::table('payments')
-                        ->where('event_booking_id', $record->id)
-                        ->where(function ($query) {
-                            $query->where('payment_type', 'salle')
-                                  ->orWhere('receipt_number', 'LIKE', 'REC-SALLE-%');
-                        })
-                        ->sum('amount');
+                        $cumul = (float) \Illuminate\Support\Facades\DB::table('payments')
+                            ->where('event_booking_id', $record->id)
+                            ->where(function ($query) {
+                                $query->where('payment_type', 'salle')
+                                      ->orWhere('receipt_number', 'LIKE', 'REC-SALLE-%');
+                            })
+                            ->sum('amount');
 
-                    return ($total - $cumul) <= 0 ? 'success' : 'warning';
-                })
-                ->formatStateUsing(function ($record) {
-                    $total = (float) ($record->total_amount ?? 0);
-                    if ($total <= 0) return 'En attente de tarif';
+                        return ($total - $cumul) <= 0 ? 'success' : 'warning';
+                    })
+                    ->formatStateUsing(function ($record) {
+                        $total = (float) ($record->total_amount ?? 0);
+                        if ($total <= 0) return 'En attente de tarif';
 
-                    $cumul = (float) \Illuminate\Support\Facades\DB::table('payments')
-                        ->where('event_booking_id', $record->id)
-                        ->where(function ($query) {
-                            $query->where('payment_type', 'salle')
-                                  ->orWhere('receipt_number', 'LIKE', 'REC-SALLE-%');
-                        })
-                        ->sum('amount');
+                        $cumul = (float) \Illuminate\Support\Facades\DB::table('payments')
+                            ->where('event_booking_id', $record->id)
+                            ->where(function ($query) {
+                                $query->where('payment_type', 'salle')
+                                      ->orWhere('receipt_number', 'LIKE', 'REC-SALLE-%');
+                            })
+                            ->sum('amount');
 
-                    $reste = max(0, $total - $cumul);
+                        $reste = max(0, $total - $cumul);
 
-                    return $reste <= 0 ? 'SOLDÉ' : number_format($reste, 0, '.', ' ') . ' FCFA';
-                }),
-
+                        return $reste <= 0 ? 'SOLDÉ' : number_format($reste, 0, '.', ' ') . ' FCFA';
+                    }),
             ])
+            ->filters([])
             ->actions([
                 \Filament\Actions\EditAction::make(),
 
@@ -212,78 +207,84 @@ class EventBookingResource extends Resource
                             ->required()
                             ->default('cash'),
                     ])
-                            ->mountUsing(function ($form, $record) {
-                                $dejaPaye = (float) \Illuminate\Support\Facades\DB::table('payments')
-                                    ->where('event_booking_id', $record->id)
-                                    ->where(function ($query) {
-                                        $query->where('payment_type', 'salle')
-                                            ->orWhere('receipt_number', 'LIKE', 'REC-SALLE-%');
-                                    })
-                                    ->sum('amount');
+                    ->mountUsing(function ($form, $record) {
+                        $dejaPaye = (float) \Illuminate\Support\Facades\DB::table('payments')
+                            ->where('event_booking_id', $record->id)
+                            ->sum('amount');
 
-                                $total = (float) ($record->total_amount ?? 0);
-                                $reliquat = max(0, $total - $dejaPaye);
+                        $total = (float) ($record->total_amount ?? 0);
+                        if ($total <= 0 && $record->eventSpace) {
+                            $salle = $record->eventSpace;
+                            $debut = \Illuminate\Support\Carbon::make($record->start_time);
+                            $fin = \Illuminate\Support\Carbon::make($record->end_time);
+                            $nbJours = $debut && $fin ? max(1, $debut->diffInDays($fin)) : 1;
+                            $total = $nbJours * (float)($salle->daily_rate ?? 0);
+                        }
 
-                                $form->fill([
-                                    'receipt_number' => 'REC-SALLE-' . date('Ymd-His'),
-                                    'amount_to_pay' => $reliquat,
-                                    'amount' => $reliquat,
-                                ]);
-                            })
+                        $reliquat = max(0, $total - $dejaPaye);
 
-                                   ->action(function (array $data, $record, \Filament\Actions\Action $action): void {
-                    // 1. Enregistrement comptable de la tranche de paiement
-                    $payment = \App\Models\Payment::create([
-                        'receipt_number'    => $data['receipt_number'],
-                        'event_booking_id'  => $record->id,
-                        'amount'            => $data['amount'],
-                        'payment_method'    => $data['payment_method'],
-                        'payment_type'      => 'salle',
-                        'status'            => 'validé / encaissé',
-                        'date_encaissement' => now(),
-                    ]);
+                        $form->fill([
+                            'receipt_number' => 'REC-SALLE-' . date('Ymd-His'),
+                            'amount_to_pay'  => $reliquat,
+                            'amount'         => $reliquat,
+                        ]);
+                    })
+                    ->action(function (array $data, $record): void {
+                        $payment = \App\Models\Payment::create([
+                            'receipt_number'    => $data['receipt_number'],
+                            'event_booking_id'  => $record->id,
+                            'amount'            => $data['amount'],
+                            'payment_method'    => $data['payment_method'],
+                            'payment_type'      => 'salle',
+                            'status'            => 'validé / encaissé',
+                            'date_encaissement' => now(),
+                        ]);
 
-                    // 🔥 ALERTE INSTANTANÉE PROPRIÉTAIRE (SALLES)
-                    \App\Services\TelegramService::notifierAlerteEncaissment(
-                        caisse: 'salle',
-                        client: $record->client_name ?? 'Organisation',
-                        montant: (float) $data['amount'],
-                        methode: $data['payment_method'],
-                        numRecu: $data['receipt_number']
-                    );
+                        \App\Services\TelegramService::notifierAlerteEncaissment(
+                            caisse: 'salle',
+                            client: $record->client_name ?? 'Client Événement',
+                            montant: (float) $data['amount'],
+                            methode: $data['payment_method'],
+                            numRecu: $data['receipt_number']
+                        );
 
-                  
-                    // 2. Lien d'impression du reçu PDF
-                    $url = route('payment.receipt.download', ['record' => $payment->id]);
+                        $url = route('payment.receipt.download', ['record' => $payment->id]);
 
-                    // 3. Déclenchement de la notification avec impression instantanée
-                    \Filament\Notifications\Notification::make()
-                        ->title('Règlement enregistré avec succès !')
-                        ->actions([
-                            \Filament\Actions\Action::make('imprimer')
-                                ->label('🖨️ Imprimer ce reçu')
-                                ->color('success')
-                                ->url($url)
-                                ->openUrlInNewTab()
-                        ])
-                        ->body("Le versement de " . number_format($data['amount'], 0, ',', ' ') . " FCFA a été validé.")
-                        ->success()
-                        ->send();
+                        \Filament\Notifications\Notification::make()
+                            ->title('Paiement de salle enregistré !')
+                            ->actions([
 
-                    $action->success();
-                })
-                ->requiresConfirmation()
-                ->modalHeading('Encaisser un règlement de salle')
-                ->modalSubmitActionLabel('Valider la recette'),
-        ])
-        // ACTIONS DE MASSE UNIFIÉES SANS DOSSIER TABLES
-               // ACTIONS DE MASSE UNIFIÉES SANS DOSSIER TABLES
-        ->bulkActions([
-            \Filament\Actions\BulkActionGroup::make([
-                \Filament\Actions\DeleteBulkAction::make(),
-            ]),
-        ]);
-} // <-- Ferme la méthode table()
+                                \Filament\Actions\Action::make('imprimer')
+                                    ->label('🖨️ Imprimer la note')
+                                    ->color('success')
+                                    ->url($url)
+                                    ->openUrlInNewTab(),
+                            ])
+                            ->success()
+                            ->send();
+                    }) // 📑 Ferme la logique PHP de l'action sans coupure par un point-virgule
+                    ->requiresConfirmation()
+                    ->modalHeading('Créer un acompte / solde d\'espace'), // 📑 Échappement de d\'espace + virgule pour enchaîner
+
+                               // 3. 🔥 ACTION DE SUPPRESSION COMPATIBLE V5 SÉCURISÉE PAR RÔLE ADMINISTRATEUR
+                \Filament\Actions\DeleteAction::make()
+                    ->label('Supprimer')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    // 🔐 FIX : Ajout du "\" devant auth() pour cibler la fonction globale de Laravel
+                    ->visible(fn () => Auth::user()?->hasRole('super_admin') ?? false)
+                    ->requiresConfirmation()
+                    ->modalHeading('Annuler et Supprimer la réservation de salle')
+                    ->modalDescription('Êtes-vous sûr de vouloir supprimer définitivement cet événement ? L\'espace événementiel sera de nouveau libéré à ces dates.')
+                    ->modalSubmitActionLabel('Confirmer la suppression'),
+
+            ]) // 📑 Clôture proprement le tableau général de vos boutons ->actions([ ... ])
+            ->bulkActions([
+                \Filament\Actions\BulkActionGroup::make([
+                    \Filament\Actions\DeleteBulkAction::make(),
+                ]),
+            ]);
+    } // 📑 Clôture définitive de la méthode public static function table(...)
 
     /**
      * FIX REAPPARITION MENU : Déclare les pages obligatoires pour que
@@ -300,4 +301,4 @@ class EventBookingResource extends Resource
 
 
 
-} // <-- Ferme la classe EventBookingResource
+}

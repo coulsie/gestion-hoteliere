@@ -115,7 +115,7 @@ class CateringOrderResource extends Resource
     }
 
 
-    public static function table(Table $table): Table
+        public static function table(Table $table): Table
     {
         return $table
             ->columns([
@@ -160,7 +160,7 @@ class CateringOrderResource extends Resource
                     }),
             ])
             ->actions([
-                // 2. ACTION D'ENCAISSEMENT RESTAURATION SCELLÉE ET SÉCURISÉE
+                // 2. ACTION D'ENCAISSEMENT RESTAURATION SCELLÉE ET SÉCURISÉE AVEC DÉSTOCKAGE
                 \Filament\Actions\Action::make('payer_resto')
                     ->label('Encaisser la note')
                     ->icon('heroicon-o-banknotes')
@@ -203,20 +203,51 @@ class CateringOrderResource extends Resource
                             'status'            => 'validé / encaissé',
                             'date_encaissement' => now(),
                         ]);
-   // 🔥 ALERTE INSTANTANÉE PROPRIÉTAIRE (RESTAURANT)
-                    \App\Services\TelegramService::notifierAlerteEncaissment(
-                        caisse: 'restauration',
-                        client: $record->client_name ?? 'Client Comptoir',
-                        montant: $montantFinal,
-                        methode: $data['payment_method'],
-                        numRecu: $payment->receipt_number
-                    );
 
-                    // Mise à jour de l'état de la commande de restaurant
+                        // 🔥 ALERTE INSTANTANÉE PROPRIÉTAIRE (RESTAURANT)
+                        \App\Services\TelegramService::notifierAlerteEncaissment(
+                            caisse: 'restauration',
+                            client: $record->client_name ?? 'Client Comptoir',
+                            montant: $montantFinal,
+                            methode: $data['payment_method'],
+                            numRecu: $payment->receipt_number
+                        );
+
+                        // Mise à jour de l'état de la commande de restaurant
                         $record->update([
                             'status' => 'paye',
                             'total_amount' => $montantFinal
                         ]);
+
+                        // ====================================================================
+                        // 🔥 ALGORITHME DE DÉSTOCKAGE AUTOMATIQUE EXCLUSIF DES BOISSONS
+                        // ====================================================================
+                        if ($record->items()->exists()) {
+                            foreach ($record->items as $orderItem) {
+                                $item = \App\Models\CateringItem::find($orderItem->catering_item_id);
+
+                                // On applique la soustraction STRICTEMENT si l'article est une boisson
+                                if ($item && $item->category === 'boisson') {
+                                    $nouveauStock = max(0, $item->stock_quantity - (int) $orderItem->quantity);
+
+                                    $item->update([
+                                        'stock_quantity' => $nouveauStock
+                                    ]);
+
+                                    // 🚨 NOTIFICATION COMPTABLE TELEGRAM : Alerte stock bas ou critique
+                                    if ($nouveauStock <= $item->alert_threshold) {
+                                        \App\Services\TelegramService::notifierAlerteEncaissment(
+                                            caisse: 'restauration_alerte_stock',
+                                            client: '🔥 SYSTEME ALERTE STOCK',
+                                            montant: (float) $nouveauStock,
+                                            methode: "Rupture imminente au bar : {$item->name}",
+                                            numRecu: "ALERTE-BAR"
+                                        );
+                                    }
+                                }
+                            }
+                        }
+                        // ====================================================================
 
                         // Génération de l'URL pour l'impression du reçu PDF
                         $url = route('payment.receipt.download', ['record' => $payment->id]);
@@ -231,13 +262,30 @@ class CateringOrderResource extends Resource
                                     ->url($url)
                                     ->openUrlInNewTab(),
                             ])
-                            ->body("Le reçu {$payment->receipt_number} d'un montant de " . number_format($montantFinal, 0, ',', ' ') . " FCFA a été validé.")
+                            ->body("Le reçu {$payment->receipt_number} d'un montant de " . number_format($montantFinal, 0, ',', ' ') . " FCFA a été validé et le stock mis à jour.")
                             ->success()
                             ->send();
                     })
                     ->requiresConfirmation()
                     ->modalHeading('Valider l\'encaissement du restaurant')
                     ->modalSubmitActionLabel('Confirmer le paiement'),
+
+                // 3. ACTION DE SUPPRESSION COMPATIBLE V5 SÉCURISÉE PAR RÔLE ADMINISTRATEUR
+                \Filament\Actions\DeleteAction::make()
+                    ->label('Supprimer')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    // 🔐 PROTECTION FILAMENT SHIELD : Seul le super_admin a le droit de voir et cliquer
+                    ->visible(fn () => auth()->user()?->hasRole('super_admin') ?? false)
+                    ->requiresConfirmation()
+                    ->modalHeading('Supprimer définitivement la commande')
+                    ->modalDescription('Êtes-vous sûr de vouloir supprimer cette commande restaurant ? Cette action détruira définitivement l\'historique de cette vente.')
+                    ->modalSubmitActionLabel('Confirmer l\'effacement'),
+            ])
+            ->bulkActions([
+                \Filament\Actions\BulkActionGroup::make([
+                    \Filament\Actions\DeleteBulkAction::make(),
+                ]),
             ]);
     }
 

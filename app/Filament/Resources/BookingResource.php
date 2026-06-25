@@ -422,12 +422,20 @@ public static function table(Table $table): Table
         ->actions([
             EditAction::make(),
 
-            // Bouton d'encaissement direct et intelligent
-                      // Bouton d'encaissement direct et intelligent hôtel sécurisé
+            // 🔥 COMPOSANT AJOUTÉ : Bouton de suppression individuelle sécurisé pour Filament v5
+            \Filament\Actions\DeleteAction::make()
+                ->label('Supprimer')
+                ->icon('heroicon-o-trash')
+                ->color('danger')
+                ->requiresConfirmation()
+                ->modalHeading('Annuler et Supprimer la réservation')
+                ->modalDescription('Êtes-vous sûr de vouloir supprimer cette réservation ? La chambre associée sera de nouveau disponible.')
+                ->modalSubmitActionLabel('Confirmer la suppression'),
+
+            // Bouton d'encaissement direct et intelligent hôtel sécurisé
             \Filament\Actions\Action::make('passer_au_paiement')
                 ->label(function ($record) {
                     $total = (float) ($record->total_price ?? 0);
-                    // FIX : Si le prix de la chambre vaut 0, on demande de configurer le tarif au lieu de marquer Soldé
                     if ($total <= 0) {
                         return 'Tarif non défini';
                     }
@@ -500,10 +508,9 @@ public static function table(Table $table): Table
                     ]);
                 })
                 ->action(function (array $data, $record, \Filament\Actions\Action $action): void {
-                    // 1. Enregistrement du paiement lié à l'hôtel (booking_id unifié)
                    $payment = \App\Models\Payment::create([
                         'receipt_number'    => $data['receipt_number'],
-                        'event_booking_id'  => $record->id, // ALIGNEMENT : Écrit dans la vraie colonne physique
+                        'event_booking_id'  => $record->id,
                         'amount'            => $data['amount'],
                         'payment_method'    => $data['payment_method'],
                         'payment_type'      => 'chambre',
@@ -511,7 +518,6 @@ public static function table(Table $table): Table
                         'date_encaissement' => now(),
                     ]);
 
-                     // 🔥 ALERTE INSTANTANÉE PROPRIÉTAIRE (HÔTEL)
                     \App\Services\TelegramService::notifierAlerteEncaissment(
                         caisse: 'chambre',
                         client: $record->customer_name ?? 'Client Hôtel',
@@ -521,8 +527,6 @@ public static function table(Table $table): Table
                     );
 
                     $url = route('payment.receipt.download', ['record' => $payment->id]);
-
-
 
                     \Filament\Notifications\Notification::make()
                         ->title('Paiement enregistré !')
@@ -539,15 +543,12 @@ public static function table(Table $table): Table
 
                     $action->success();
                 })
-
                 ->requiresConfirmation()
-                ->modalHeading('Créer un paiement direct')
-                ->modalSubmitActionLabel('Valider l\'encaissement'),
+                ->modalHeading('Créer un paiement direct'),
         ])
         ->bulkActions([
-            BulkActionGroup::make([
-                DeleteBulkAction::make(),
-                // L'Observer s'occupe automatiquement de libérer les cartes et salir les chambres
+            \Filament\Actions\BulkActionGroup::make([
+                \Filament\Actions\DeleteBulkAction::make(),
             ]),
         ]);
 }

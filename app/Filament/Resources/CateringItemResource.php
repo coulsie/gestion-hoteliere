@@ -43,7 +43,37 @@ class CateringItemResource extends Resource
                     ->prefix('FCFA')
                     ->required()
                     ->label('Prix Unitaire'),
-            ]);
+
+                // 🔥 1. Assurez-vous que le champ "category" existant dispose de ->live() pour réveiller le formulaire
+                Forms\Components\Select::make('category')
+                    ->label('Catégorie')
+                    ->options([
+                        'plat' => '🍽️ Plat Cuisiné',
+                        'boisson' => '🍹 Boisson / Bar',
+                        'forfait_buffet' => '🏢 Forfait Buffet',
+                    ])
+                    ->required()
+                    ->live(), // 🔥 OBLIGATOIRE pour rendre le formulaire réactif
+
+                // 🔥 2. Ajoutez ensuite les deux champs de stock avec la restriction "boisson"
+                Forms\Components\TextInput::make('stock_quantity')
+                    ->label('Quantité en Stock Actuelle')
+                    ->numeric()
+                    ->default(0)
+                    ->required()
+                    // 🛡️ SÉCURITÉ : Visible UNIQUEMENT si la catégorie vaut 'boisson'
+                    ->visible(fn ($get) => $get('category') === 'boisson'),
+
+                Forms\Components\TextInput::make('alert_threshold')
+                    ->label('Seuil d\'alerte critique')
+                    ->numeric()
+                    ->default(5)
+                    ->required()
+                    ->hint('Alerte si le stock descend sous ce nombre')
+                    // 🛡️ SÉCURITÉ : Visible UNIQUEMENT si la catégorie vaut 'boisson'
+                    ->visible(fn ($get) => $get('category') === 'boisson'),
+
+                        ]);
     }
 
         public static function table(Table $table): Table
@@ -67,6 +97,27 @@ class CateringItemResource extends Resource
                 \Filament\Tables\Columns\TextColumn::make('unit_price')
                     ->money('XOF')
                     ->label('Prix Unitaire'),
+
+
+                // À insérer dans ->columns([...]) de votre fonction table():
+                Tables\Columns\TextColumn::make('stock_quantity')
+                    ->label('Stock Réel')
+                    ->sortable()
+                    // 🔥 Si c'est un plat, on affiche un tiret, si c'est une boisson, on affiche le chiffre ou "RUPTURE"
+                    ->formatStateUsing(function ($state, $record) {
+                        if ($record->category !== 'boisson') {
+                            return '—';
+                        }
+                        return $state <= 0 ? '🚨 RUPTURE DE STOCK' : $state . ' bouteille(s)';
+                    })
+                    ->badge()
+                    ->color(function ($state, $record) {
+                        if ($record->category !== 'boisson') return 'gray';
+                        if ($state <= 0) return 'danger';
+                        if ($state <= $record->alert_threshold) return 'warning';
+                        return 'success';
+                    }),
+
             ])
             // 🔥 CORRECTION : On ne garde strictement que l'Action native de modification des plats
             ->actions([
