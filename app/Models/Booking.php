@@ -17,6 +17,13 @@ class Booking extends Model
         'key_card_assigned_at' => 'datetime',
         'key_card_expires_at' => 'datetime',
     ];
+    protected function casts(): array
+    {
+        return [
+            'check_in' => 'datetime',
+            'check_out' => 'datetime',
+        ];
+    }
 
     /**
      * Relation : Une réservation appartient à une chambre physique
@@ -85,7 +92,7 @@ protected static function booted(): void
     /**
      * Relation : Une réservation peut avoir plusieurs commandes de restauration
      */
-    
+
 
     /**
      * Relation : Une réservation peut avoir plusieurs commandes de restauration
