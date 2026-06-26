@@ -45,26 +45,23 @@ class BookingResource extends Resource
                     ->columnSpanFull(),
 
                 Forms\Components\Select::make('room_id')
-                    ->label('Chambre N°')
-                    ->relationship(
-                        name: 'room',
-                        titleAttribute: 'number',
-                        modifyQueryUsing: fn($query) => $query->where('housekeeping_status', 'propre')
-                    )
+    ->label('Chambre N°')
+    ->relationship(
+        name: 'room',
+        titleAttribute: 'number',
+        modifyQueryUsing: fn($query) => $query->where('housekeeping_status', 'propre')
+    )
+
+                // 🔥 FORCE l'affichage personnalisé : Numéro + Nom du type de chambre
+                    ->getOptionLabelFromRecordUsing(fn (\App\Models\Room $record) => "{$record->number} ({$record->roomType?->name})")
                     ->required()
                     ->searchable()
                     ->preload()
                     ->live()
-
-                   ->afterStateUpdated(function ($state, $set, $get) {
-                        // 1. Force la remise à zéro pour effacer les 25 000 FCFA fantômes
-                        $set('total_price', 0);
-
-                        // 2. Exécution de vos automatisations de dates
+                    ->afterStateUpdated(function ($state, $set, $get) {
+                        $set('total_price', 0); // Nettoyage initial
                         static::synchroniserDatesPassage($get, $set);
                         static::forcerHeureSortieMidi($get, $set);
-
-                        // 3. Calcul immédiat du vrai prix
                         static::calculerTarifDynamique($get, $set);
                     })
                     ->rules([
@@ -201,7 +198,7 @@ class BookingResource extends Resource
                     ]),
 
 
-               
+
                 // 5. ZONE DU TARIF FINAL SÉCURISÉ (Lecture seule totale)
                 Forms\Components\TextInput::make('total_price')
                     ->label('Montant Total Facturé')

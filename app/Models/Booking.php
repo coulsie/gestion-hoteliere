@@ -73,6 +73,20 @@ public function getMontantTotalChambreAttribute(): float
 
 protected static function booted(): void
 {
+    // CAS A : Lors de la modification de la réservation (ex: changement de statut de séjour)
+    static::updating(function (Booking $booking) {
+        // Détecte si le statut de la réservation vient d'être modifié
+        // AJUSTEZ 'status' et 'termine' selon les vrais noms de vos attributs si besoin
+        if ($booking->isDirty('status') && $booking->status === 'termine') {
+            if ($booking->room_id) {
+                \App\Models\Room::where('id', $booking->room_id)->update([
+                    'housekeeping_status' => 'sale'
+                ]);
+            }
+        }
+    });
+
+    // CAS B : L'existant lors de la suppression de la réservation
     static::deleting(function (Booking $booking) {
         // 1. Libération automatique de la carte magnétique
         if ($booking->key_card_id) {
@@ -120,6 +134,7 @@ protected static function booted(): void
         return $coutChambre + $coutRestauration;
     }
 
+    
 
 }
 
