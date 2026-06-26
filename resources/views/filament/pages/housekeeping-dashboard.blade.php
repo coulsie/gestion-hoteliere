@@ -1,52 +1,85 @@
 <x-filament-panels::page>
-    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        @foreach($this->chambres as $chambre)
-            @php
-                // Détermination de la couleur du bloc selon l'état du ménage
-                $bgClass = match($chambre->housekeeping_status) {
-                    'propre' => 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-800',
-                    'sale' => 'bg-rose-50 border-rose-200 dark:bg-rose-950/20 dark:border-rose-800',
-                    'en_cours' => 'bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-800',
-                    'maintenance' => 'bg-gray-50 border-gray-200 dark:bg-gray-950/20 dark:border-gray-800',
-                    default => 'bg-white border-gray-200'
-                };
+    <!-- Chargement sécurisé de Bootstrap 5.3.2 -->
+    <link href="https://jsdelivr.net" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
 
-                $badgeColor = match($chambre->housekeeping_status) {
-                    'propre' => 'text-emerald-700 bg-emerald-100',
-                    'sale' => 'text-rose-700 bg-rose-100',
-                    'en_cours' => 'text-amber-700 bg-amber-100',
-                    'maintenance' => 'text-gray-700 bg-gray-100',
-                    default => 'text-gray-700 bg-gray-100'
-                };
-            @endphp
+    <!-- Styles correctifs pour forcer le quadrillage et l'effet cliquable -->
+    <style>
+        .custom-grid-table {
+            border: 2px solid #343a40 !important;
+        }
+        .custom-grid-table th, .custom-grid-table td {
+            border: 1px solid #6c757d !important; /* Force le quadrillage gris visible */
+            padding: 15px !important;
+        }
+        /* Style pour rendre les cellules cliquables visuellement */
+        .cellule-cliquable {
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .cellule-cliquable:hover {
+            background-color: #f1f3f5 !important;
+            transform: scale(1.01);
+            box-shadow: inset 0 0 0 2px #0d6efd;
+        }
+    </style>
 
-            <div class="p-5 border rounded-xl shadow-sm flex flex-col justify-between {{ $bgClass }}">
-                <div>
-                    <div class="flex justify-between items-start mb-2">
-                        <h3 class="text-xl font-bold text-gray-900 dark:text-white">Chambre N° {{ $chambre->number }}</h3>
-                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full {{ $badgeColor }}">
-                            {{ strtoupper($chambre->housekeeping_status) }}
-                        </span>
-                    </div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">{{ $chambre->roomType->name ?? 'Catégorie inconnue' }}</p>
-                </div>
+    <div class="bootstrap-scope bg-white p-3 rounded-3 shadow-sm text-dark">
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle m-0 text-center custom-grid-table">
+                <thead>
+                    <tr>
+                        <th scope="col" style="width: 15%;">Chambre N°</th>
+                        <th scope="col" style="width: 35%;">Catégorie / Type</th>
+                        <th scope="col" style="width: 50%;">État de Propreté (Cliquer pour changer)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($this->chambres as $chambre)
+                        @php
+                            $badgeClass = match($chambre->housekeeping_status) {
+                                'propre' => 'badge bg-success text-white px-4 py-2 fs-6',
+                                'sale' => 'badge bg-danger text-white px-4 py-2 fs-6',
+                                'en_cours' => 'badge bg-warning text-dark px-4 py-2 fs-6',
+                                'maintenance' => 'badge bg-secondary text-white px-4 py-2 fs-6',
+                                default => 'badge bg-light text-dark px-4 py-2 fs-6'
+                            };
 
-                <div class="flex flex-col gap-2 mt-2">
-                    @if($chambre->housekeeping_status === 'sale')
-                        <button wire:click="démarrerMénage({{ $chambre->id }})"
-                                class="w-full py-2 px-3 text-xs font-medium text-center text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition">
-                            🧹 Commencer le ménage
-                        </button>
-                    @endif
+                            $labelEtat = match($chambre->housekeeping_status) {
+                                'propre' => '🧼 PROPRE / PRÊTE',
+                                'sale' => '🍂 SALE (À nettoyer)',
+                                'en_cours' => '🧹 MÉNAGE EN COURS',
+                                'maintenance' => '🛠️ MAINTENANCE',
+                                default => strtoupper($chambre->housekeeping_status)
+                            };
+                        @endphp
+                        <tr>
+                            <!-- 1. NUMÉRO -->
+                            <td class="fw-bold fs-4 text-dark bg-light">
+                                {{ $chambre->number }}
+                            </td>
 
-                    @if($chambre->housekeeping_status === 'en_cours' || $chambre->housekeeping_status === 'sale')
-                        <button wire:click="marquerCommePropre({{ $chambre->id }})"
-                                class="w-full py-2 px-3 text-xs font-medium text-center text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition">
-                            🧼 Marquer comme PROPRE
-                        </button>
-                    @endif
-                </div>
-            </div>
-        @endforeach
+                            <!-- 2. CATÉGORIE -->
+                            <td class="fw-medium text-secondary text-start ps-4">
+                                {{ $chambre->roomType->name ?? 'Non spécifiée' }}
+                            </td>
+
+                            <!-- 3. CELLULE ENTIÈRE CLIQUABLE -->
+                            <td class="cellule-cliquable"
+                                wire:click="changerEtatChambreAction({{ $chambre->id }})"
+                                title="Cliquer pour modifier le statut">
+                                <div class="d-flex justify-content-between align-items-center px-3">
+                                    <span class="{{ $badgeClass }}">
+                                        {{ $labelEtat }}
+                                    </span>
+                                    <span class="text-muted small border rounded px-2 py-1 bg-light" style="font-size: 11px;">
+                                        👆 Cliquer pour basculer
+                                    </span>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
     </div>
 </x-filament-panels::page>
