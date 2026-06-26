@@ -34,7 +34,7 @@ class BookingResource extends Resource
     protected static ?string $modelLabel = 'Réservation';
 
 
-    public static function form(Schema $schema): Schema
+       public static function form(Schema $schema): Schema
     {
         return $schema
             ->columns(2)
@@ -55,8 +55,16 @@ class BookingResource extends Resource
                     ->searchable()
                     ->preload()
                     ->live()
-                    ->afterStateUpdated(function ($state, $set, $get) {
+
+                   ->afterStateUpdated(function ($state, $set, $get) {
+                        // 1. Force la remise à zéro pour effacer les 25 000 FCFA fantômes
+                        $set('total_price', 0);
+
+                        // 2. Exécution de vos automatisations de dates
                         static::synchroniserDatesPassage($get, $set);
+                        static::forcerHeureSortieMidi($get, $set);
+
+                        // 3. Calcul immédiat du vrai prix
                         static::calculerTarifDynamique($get, $set);
                     })
                     ->rules([
@@ -75,15 +83,28 @@ class BookingResource extends Resource
                         },
                     ]),
 
-                // 1. ARRIVÉE
+
+                // Champ informatif : Prix Unitaire (insérer sous le Select de la chambre)
+                Forms\Components\TextInput::make('prix_unitaire_info')
+                    ->label('Prix de base / Nuitée')
+                    ->numeric()
+                    ->prefix('FCFA')
+                    ->readOnly() // Empêche la modification manuelle
+                    ->dehydrated(false), // Ne s'enregistre pas en base de données (champ purement visuel)
+
+
+
+                    // 1. COMPOSANT DATE D'ARRIVÉE (INCHANGÉ)
                 Forms\Components\DateTimePicker::make('check_in')
                     ->label('Date & Heure d\'arrivée')
                     ->default(now()->startOfMinute())
                     ->required()
-                    ->live()
+
+                    ->live(onBlur: true) // 🔥 Indispensable pour envoyer la date au serveur
                     ->seconds(false)
                     ->afterStateUpdated(function ($state, $set, $get) {
                         static::synchroniserDatesPassage($get, $set);
+                        static::forcerHeureSortieMidi($get, $set); // 🔥 CORRECTION
                         static::calculerTarifDynamique($get, $set);
                     })
                     ->rules([
@@ -109,7 +130,7 @@ class BookingResource extends Resource
                         },
                     ]),
 
-                // 2. NOMBRE HEURES
+                // 2. DURÉE HORAIRE (Affiché uniquement pour la caisse Passage)
                 Forms\Components\Select::make('nombre_heures')
                     ->label('Durée du passage (Heures)')
                     ->options([
@@ -133,21 +154,26 @@ class BookingResource extends Resource
                         static::calculerTarifDynamique($get, $set);
                     }),
 
-                // 3. DÉPART POUR CHAMBRE NORMALE (Sélecteur classique actif)
-                Forms\Components\DateTimePicker::make('check_out')
-                    ->label('Date & Heure de départ')
+                // 3. DATE & HEURE DE SORTIE (Pour les nuitées classiques)
+               Forms\Components\DateTimePicker::make('check_out')
+                    ->label('Date & Heure de Sortie')
                     ->default(now()->addDay()->startOfMinute())
                     ->required()
-                    ->live()
+                    ->live(onBlur: true)
                     ->seconds(false)
-                    ->dehydrated()
-                    ->visible(function ($get) {
+
+                    // 🔥 LES DEUX LIGNES DE LA VICTOIRE :
+                    // On ne le cache plus, on le désactive pour l'utilisateur, mais on FORCE l'envoi SQL
+                    ->disabled(function ($get) {
                         $roomId = $get('room_id');
-                        if (!$roomId) return true;
+                        if (!$roomId) return false;
                         $room = \App\Models\Room::with('roomType')->find($roomId);
-                        return !str_contains(strtolower($room?->roomType?->name ?? ''), 'passage');
+                        return str_contains(strtolower($room?->roomType?->name ?? ''), 'passage');
                     })
+                    ->dehydrated(true) // Force l'envoi vers MariaDB même si le champ est grisé/disabled
+
                     ->afterStateUpdated(function ($state, $set, $get) {
+                        static::forcerHeureSortieMidi($get, $set);
                         static::calculerTarifDynamique($get, $set);
                     })
                     ->rules([
@@ -155,7 +181,7 @@ class BookingResource extends Resource
                             return function (string $attribute, $value, \Closure $fail) use ($get) {
                                 $checkIn = $get('check_in');
                                 if ($checkIn && $value && \Carbon\Carbon::parse($value)->isBefore(\Carbon\Carbon::parse($checkIn))) {
-                                    $fail("La date et heure de départ doivent être supérieures à l'arrivée.");
+                                    $fail("La date et heure de sortie doivent être supérieures à l'arrivée.");
                                 }
                             };
                         },
@@ -174,64 +200,89 @@ class BookingResource extends Resource
                         },
                     ]),
 
-                // 4. AFFICHAGE DU DÉPART POUR LES PASSAGES (Lecture seule textuelle, sans blocage JS)
-                Forms\Components\TextInput::make('check_out_display')
-                    ->label('Date & Heure de départ (Calculé)')
-                    ->disabled() // Bloqué proprement à l'écran
-                    ->dehydrated(false) // Non enregistré en BDD (purement visuel)
-                    ->visible(function ($get) {
-                        $roomId = $get('room_id');
-                        if (!$roomId) return false;
-                        $room = \App\Models\Room::with('roomType')->find($roomId);
-                        return str_contains(strtolower($room?->roomType?->name ?? ''), 'passage');
-                    }),
 
-                // 5. CHAMP TECHNIQUE CACHÉ (Reçoit la valeur exacte et exécute la validation anti-chevauchement)
-                Forms\Components\Hidden::make('check_out')
-                    ->dehydrated()
-                    ->live()
-                    ->rules([
-                        function ($get, $record) {
-                            return function (string $attribute, $value, \Closure $fail) use ($get, $record) {
-                                $roomId = $get('room_id');
-                                $checkIn = $get('check_in');
-                                $bookingId = $record?->id ?? $get('id');
-
-                                // Double vérification si c'est un passage
-                                if ($roomId && $checkIn && $value) {
-                                    if (static::verifierOccupationChambre($roomId, $checkIn, $value, $bookingId)) {
-                                        $fail(static::obtenirMessageErreurOccupation($roomId, $checkIn, $value, $bookingId));
-                                    }
-                                }
-                            };
-                        },
-                    ]),
-
+               
+                // 5. ZONE DU TARIF FINAL SÉCURISÉ (Lecture seule totale)
                 Forms\Components\TextInput::make('total_price')
-                    ->label('Prix Total')
+                    ->label('Montant Total Facturé')
                     ->numeric()
-                    ->required()
                     ->prefix('FCFA')
-                    ->dehydrated()
-                    ->readOnly(),
-
-                Forms\Components\Select::make('key_card_id')
-                    ->label('Attribuer une Carte Magnétique')
-                    ->relationship('keyCard', 'uid')
-                    ->placeholder('Sélectionnez ou scannez une carte RFID')
-                    ->searchable()
-                    ->preload()
-                    ->options(function () {
-                        return \App\Models\KeyCard::where('status', 'active')
-                            ->get()
-                            ->mapWithKeys(function ($card) {
-                                $texteAffichage = $card->label ? "{$card->uid} ({$card->label})" : $card->uid;
-                                return [$card->id => $texteAffichage];
-                            })->toArray();
-                    }),
+                    ->readOnly()
+                    ->required()
+                    ->columnSpanFull()
             ]);
     }
 
+    /**
+     * 🛡️ COMPOSANT DE VERROUILLAGE : RE-ECRIT L'HEURE DE SORTIE À 12H00 PILE
+     */
+    protected static function forcerHeureSortieMidi($get, $set): void
+    {
+        $roomId = $get('room_id');
+        if (!$roomId) return;
+
+        $room = \App\Models\Room::with('roomType')->find($roomId);
+        $isPassage = str_contains(strtolower($room?->roomType?->name ?? ''), 'passage');
+
+        // Si ce n'est pas un passage (chambre normale, suite...), on écrase l'heure de sortie par 12h00
+        if (!$isPassage && $get('check_out')) {
+            $dateBrute = \Illuminate\Support\Carbon::parse($get('check_out'))->format('Y-m-d');
+            $set('check_out', $dateBrute . ' 12:00:00'); // Bloque la sortie à midi pile
+        }
+    }
+
+    /**
+     * 📊 ALGORITHME COMPTABLE AUX JOURS PURS
+     */
+protected static function calculerTarifDynamique($get, $set): void
+{
+    $roomId = $get('room_id');
+
+    if (!$roomId) {
+        $set('total_price', 0);
+        $set('prix_unitaire_info', 0); // Remise à zéro
+        return;
+    }
+
+    $checkIn = $get('check_in') ?? now()->toDateTimeString();
+    $checkOut = $get('check_out') ?? now()->addDay()->setHour(12)->setMinute(0)->toDateTimeString();
+
+    $room = \App\Models\Room::with('roomType')->find($roomId);
+    if (!$room || !$room->roomType) {
+        return;
+    }
+
+    $prixBase = (float) $room->roomType->base_price;
+
+    // 🔥 ACTION : On affiche instantanément le prix unitaire dans le nouveau champ info
+    $set('prix_unitaire_info', $prixBase);
+
+    $nomTypeChambre = strtolower($room->roomType->name ?? '');
+    $isPassage = str_contains($nomTypeChambre, 'passage');
+
+    // ====================================================================
+    // CAS 1 — SÉJOUR CLASSIQUE (NUITÉES)
+    // ====================================================================
+    if (!$isPassage) {
+        $dateArrivee = \Illuminate\Support\Carbon::parse($checkIn)->floorDay();
+        $dateSortie = \Illuminate\Support\Carbon::parse($checkOut)->floorDay();
+
+        $nbNuitees = (int) $dateArrivee->diffInDays($dateSortie);
+
+        if ($nbNuitees <= 0) {
+            $nbNuitees = 1;
+        }
+
+        $set('total_price', $nbNuitees * $prixBase);
+    }
+    // ====================================================================
+    // CAS 2 — PASSAGE HORAIRE
+    // ====================================================================
+    else {
+        $heures = (int) ($get('nombre_heures') ?? 1);
+        $set('total_price', $heures * $prixBase);
+    }
+}
 
     public static function getValidationRules(): array
     {
@@ -325,56 +376,8 @@ class BookingResource extends Resource
      * Alignement complet des calculs sur la structure de votre base de données
      */
 
- public static function calculerTarifDynamique($get, $set): void
-    {
-        $roomId = $get('room_id');
-        $start = $get('check_in');
-
-        if (!empty($roomId) && !empty($start)) {
-            $room = Room::with('roomType')->find($roomId);
-            $typeChambre = strtolower($room?->roomType?->name ?? '');
-            $prixUnitaire = $room?->roomType?->base_price ?? 0;
-
-            if (str_contains($typeChambre, 'passage') || str_contains($typeChambre, 'heure')) {
-                $heures = (int) ($get('nombre_heures') ?? 1);
-                $set('check_out', $start);
-                $set('total_price', $heures * $prixUnitaire);
-            } else {
-                $end = $get('check_out');
-                if ($end) {
-                    $debut = Carbon::make($start);
-                    $fin = Carbon::make($end);
-                    $jours = max(1, $debut->diffInDays($fin));
-                    $set('total_price', $jours * $prixUnitaire);
-                }
-            }
-        }
-    }
 
 
-    public static function calculerPrixTotal($get, $set): void
-    {
-        $checkIn = $get('check_in');
-        $checkOut = $get('check_out');
-        $roomId = $get('room_id');
-
-        if ($checkIn && $checkOut && $roomId) {
-            $debut = Carbon::parse($checkIn);
-            $fin = Carbon::parse($checkOut);
-            $nuits = $debut->diffInDays($fin);
-
-            if ($nuits > 0) {
-                // Récupère la chambre avec son type pour avoir le prix de base
-                $chambre = Room::with('roomType')->find($roomId);
-                $prixBase = $chambre?->roomType?->base_price ?? 0;
-
-                // Assigne la valeur calculée au champ total_price
-                $set('total_price', $nuits * $prixBase);
-            } else {
-                $set('total_price', 0);
-            }
-        }
-    }
 public static function table(Table $table): Table
 {
     return $table
@@ -567,33 +570,35 @@ public static function table(Table $table): Table
     }
 
     protected static function synchroniserDatesPassage($get, $set): void
-    {
-        $roomId = $get('room_id');
-        $checkIn = $get('check_in');
+{
+    $roomId = $get('room_id');
+    $checkIn = $get('check_in');
 
-        if (!$roomId || !$checkIn) return;
+    if (!$roomId || !$checkIn) return;
 
-        $room = \App\Models\Room::with('roomType')->find($roomId);
-        if (!$room) return;
+    $room = \App\Models\Room::with('roomType')->find($roomId);
+    if (!$room) return;
 
-        $type = strtolower($room->roomType?->name ?? '');
+    $isPassage = str_contains(strtolower($room->roomType->name ?? ''), 'passage');
 
-        if (str_contains($type, 'passage')) {
-            $heures = (int) $get('nombre_heures', 1);
+    if ($isPassage) {
+        // 1. Récupération brute de l'option (ex: "3 Heures de passage" ou 3)
+        $valeurHeures = $get('nombre_heures') ?? 1;
 
-            // Calcul de Carbon (Gère parfaitement le basculement au jour d'après)
-            $dateDepart = \Illuminate\Support\Carbon::parse($checkIn)->addHours($heures)->startOfMinute();
+        // 2. Extraction du premier nombre trouvé dans le texte s'il s'agit d'une chaîne
+        preg_match('/\d+/', (string)$valeurHeures, $matches);
+        $heuresAPasser = isset($matches[0]) ? (int)$matches[0] : 1;
 
-            // 1. On pousse la valeur brute en BDD via le champ caché (Lu par le validateur de chevauchement)
-            $set('check_out', $dateDepart->format('Y-m-d H:i:s'));
+        // 3. Calcul de la date de sortie exacte : Arrivée + X heures
+        $dateSortieCalculee = \Illuminate\Support\Carbon::parse($checkIn)
+            ->addHours($heuresAPasser)
+            ->toDateTimeString();
 
-            // 2. On pousse la valeur lisible pour le réceptionniste à l'écran
-            $set('check_out_display', $dateDepart->format('d/m/Y à H:i'));
-        } else {
-            // Si on rebascule sur une chambre normale, on réinitialise à demain par défaut
-            $set('check_out', \Carbon\Carbon::parse($checkIn)->addDay()->startOfMinute()->format('Y-m-d H:i:s'));
-        }
+        // 4. On injecte la date de sortie calculée directement dans le SEUL champ officiel
+        $set('check_out', $dateSortieCalculee);
     }
+}
+
 
     // Fonction d'aide pour éviter la duplication de code dans votre fichier
     protected static function isPassageChambre($get): bool
@@ -606,4 +611,62 @@ public static function table(Table $table): Table
 
         return str_contains($type, 'passage') || str_contains($type, 'heure');
     }
+
+    /**
+     * 🧠 CALCULATEUR AUTOMATIQUE ET ÉTANCHE DE LA TARIFICATION HÔTELIÈRE
+     */
+ public static function calculerPrixTotal($set, $get): void
+{
+    $roomId = $get('room_id');
+    $checkIn = $get('check_in');
+    $checkOut = $get('check_out');
+    $typeSejour = $get('type_sejour') ?? 'sejour';
+
+    if (!$roomId || !$checkIn || !$checkOut) {
+        $set('total_price', 0);
+        return;
+    }
+
+    // Chargement de la chambre avec sa relation de type de chambre
+    $chambre = Room::with('roomType')->find($roomId);
+    if (!$chambre) return;
+
+    // Détermination dynamique du prix (vérifie 'price' ou 'prix' sur le type ou la chambre directement)
+    $prixUnitaire = (float) (
+        $chambre->roomType->price ??
+        $chambre->roomType->prix ??
+        $chambre->price ??
+        $chambre->prix ??
+        25000
+    );
+
+    // Extraction stricte des dates pour éliminer les décalages horaires
+    $dateArrivee = \Carbon\Carbon::parse($checkIn)->startOfDay();
+    $dateSortie = \Carbon\Carbon::parse($checkOut)->startOfDay();
+    $nbJours = (int) $dateArrivee->diffInDays($dateSortie);
+
+    if ($nbJours <= 0) {
+        $nbJours = 1;
+    }
+
+    // 🛡️ Cas 1 : Séjour classique (Nuitée)
+    if ($typeSejour === 'sejour') {
+        $set('total_price', $nbJours * $prixUnitaire);
+    }
+    // ⏳ Cas 2 : Heures de passage
+    else {
+        $debut = \Carbon\Carbon::parse($checkIn);
+        $fin = \Carbon\Carbon::parse($checkOut);
+        $nbHeures = $debut->diffInHours($fin);
+
+        if ($nbHeures <= 0) $nbHeures = 1;
+
+        $prixHoraire = $prixUnitaire / 4;
+        $set('total_price', round($nbHeures * $prixHoraire));
+    }
 }
+
+
+
+}
+

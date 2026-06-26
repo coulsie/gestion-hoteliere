@@ -117,48 +117,92 @@
         </div>
     </div>
 
-    <!-- GRILLE DE PRESTATIONS -->
-    <table>
-        <thead>
-            <tr>
-                <th>Désignation</th>
-                <th style="text-align:right; width:120px;">Prix Unitaire</th>
-                <th style="text-align:center; width:60px;">Qté</th>
-                <th style="text-align:right; width:120px;">Montant Net</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if($estRestaurant)
+   <!-- GRILLE DE PRESTATIONS -->
+<!-- GRILLE DE PRESTATIONS -->
+<table>
+    <thead>
+        <tr>
+            <th>Désignation</th>
+            <th style="text-align:right; width:120px;">Prix Unitaire</th>
+
+            <!-- DYNAMIQUE : Alterne entre "Nuits", "Heures" ou "Qté" selon le type de prestation -->
+            <th style="text-align:center; width:80px;">
+                @if($estRestaurant)
+                    Qté
+                @elseif(isset($booking->room->roomType) && str_contains(strtolower($booking->room->roomType->name ?? ''), 'passage'))
+                    Heures
+                @else
+                    Nuits
+                @endif
+            </th>
+
+            <th style="text-align:right; width:120px;">Montant Net</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if($estRestaurant)
+            @php
+                $commande = \App\Models\CateringOrder::where('total_amount', $payment->amount)->orderBy('created_at', 'desc')->first();
+                $lignes = $commande ? $commande->items : [];
+            @endphp
+            @forelse($lignes as $item)
+                <tr>
+                    <td>🍽️ {{ $item->cateringItem?->name ?? 'Consommation' }}</td>
+                    <td style="text-align:right;">{{ number_format((float)$item->price, 0, ',', ' ') }} F CFA</td>
+                    <td style="text-align:center;">{{ $item->quantity }}</td>
+                    <td style="text-align:right; font-weight:bold;">{{ number_format(((float)$item->price * (int)$item->quantity), 0, ',', ' ') }} F CFA</td>
+                </tr>
+            @empty
+                <tr>
+                    <td>🍽️ Consommations directes Restaurant</td>
+                    <td style="text-align:right;">{{ number_format($payment->amount, 0, ',', ' ') }} F CFA</td>
+                    <td style="text-align:center;">1</td>
+                    <td style="text-align:right; font-weight:bold;">{{ number_format($payment->amount, 0, ',', ' ') }} F CFA</td>
+                </tr>
+            @endforelse
+        @else
+            @if(!$estSalle && isset($booking->room->roomType))
                 @php
-                    $commande = \App\Models\CateringOrder::where('total_amount', $payment->amount)->orderBy('created_at', 'desc')->first();
-                    $lignes = $commande ? $commande->items : [];
+                    $prixUnitaireChambre = (float) $booking->room->roomType->base_price;
+                    $nomType = strtolower($booking->room->roomType->name ?? '');
+
+                    // CORRECTION : Détection fiable de la quantité (Heures ou Nuits)
+                    if (str_contains($nomType, 'passage')) {
+                        // Extrait le nombre d'heures directement de l'écart réel entre l'arrivée et le départ
+                        $debut = \Carbon\Carbon::parse($booking->check_in);
+                        $fin = \Carbon\Carbon::parse($booking->check_out);
+                        $qteCalculable = (int) $debut->diffInHours($fin);
+
+                        // Sécurité si l'écart d'heures est arrondi à 0 par Carbon
+                        $qteCalculable = $qteCalculable <= 0 ? (int)($booking->nombre_heures ?? 1) : $qteCalculable;
+                    } else {
+                        // Séjour classique : Nombre de nuits
+                        $dateArrivee = \Carbon\Carbon::parse($booking->check_in)->floorDay();
+                        $dateSortie = \Carbon\Carbon::parse($booking->check_out)->floorDay();
+                        $qteCalculable = (int) $dateArrivee->diffInDays($dateSortie);
+                        $qteCalculable = $qteCalculable <= 0 ? 1 : $qteCalculable;
+                    }
                 @endphp
-                @forelse($lignes as $item)
-                    <tr>
-                        <td>🍽️ {{ $item->cateringItem?->name ?? 'Consommation' }}</td>
-                        <td style="text-align:right;">{{ number_format((float)$item->price, 0, ',', ' ') }} F CFA</td>
-                        <td style="text-align:center;">{{ $item->quantity }}</td>
-                        <td style="text-align:right; font-weight:bold;">{{ number_format(((float)$item->price * (int)$item->quantity), 0, ',', ' ') }} F CFA</td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td>🍽️ Consommations directes Restaurant</td>
-                        <td style="text-align:right;">{{ number_format($payment->amount, 0, ',', ' ') }} F CFA</td>
-                        <td style="text-align:center;">1</td>
-                        <td style="text-align:right; font-weight:bold;">{{ number_format($payment->amount, 0, ',', ' ') }} F CFA</td>
-                    </tr>
-                @endforelse
+                <tr>
+                    <td>🏨 Hébergement : Chambre N° {{ $booking->room->number ?? '' }} ({{ $booking->room->roomType->name ?? '' }})</td>
+                    <td style="text-align:right;">{{ number_format($prixUnitaireChambre, 0, ',', ' ') }} F CFA</td>
+
+                    <!-- REFUGE DE LA QUANTITÉ CORRIGÉE (Affiche 4 pour 4 heures de passage) -->
+                    <td style="text-align:center;">{{ $qteCalculable }}</td>
+
+                    <td style="text-align:right; font-weight:bold;">{{ number_format($prixUnitaireChambre * $qteCalculable, 0, ',', ' ') }} F CFA</td>
+                </tr>
             @else
                 <tr>
-                    <!-- FIX DÉSIGNATION : Affiche la bonne étiquette selon la caisse sélectionnée -->
-                    <td>{{ $estSalle ? '🏢 Location d\'Espace Événementiel' : '🏨 Hébergement : Occupation de Chambre' }}</td>
+                    <td>🏢 {{ $estSalle ? 'Location d\'Espace Événementiel' : 'Hébergement : Occupation de Chambre' }}</td>
                     <td style="text-align:right;">{{ number_format($totalTheorique, 0, ',', ' ') }} F CFA</td>
                     <td style="text-align:center;">1</td>
                     <td style="text-align:right; font-weight:bold;">{{ number_format($totalTheorique, 0, ',', ' ') }} F CFA</td>
                 </tr>
             @endif
-        </tbody>
-    </table>
+        @endif
+    </tbody>
+</table>
 
     <!-- TOTAL FINANCIER -->
     <div style="margin-top:20px; float:right; width:380px; font-size:14px; line-height:1.8;">
